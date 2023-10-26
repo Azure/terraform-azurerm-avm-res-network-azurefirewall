@@ -57,8 +57,8 @@ module "firewall" {
   # source             = "Azure/avm-res-network-firewall/azurerm"
   firewall_name           = module.naming.firewall.name
   enable_telemetry        = var.enable_telemetry
-  location                = azurerm_resource_group.this.location
-  resource_group_name     = azurerm_resource_group.this.name
+  location                = azurerm_resource_group.rg.location
+  resource_group_name     = azurerm_resource_group.rg.name
   firewall_ip_config_name = module.naming.firewall_ip_configuration.name
   firewall_sku_name       = "AZFW_VNet"
   firewall_sku_tier       = "Standard"
