@@ -49,7 +49,7 @@ variable "firewall_ip_config_name" {
 }
 
 variable "subnet_id" {
-  type = string
+  type        = string
   description = "The ID of the subnet where the Azure Firewall will be deployed."
 }
 
