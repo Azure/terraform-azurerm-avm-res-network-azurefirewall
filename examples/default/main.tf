@@ -53,7 +53,7 @@ module "vnet" {
 
 # This is the module call
 module "firewall" {
-  source = "../../"
+  source = "Azure/avm/res-network-firewall/azurerm"
   # source             = "Azure/avm-res-network-firewall/azurerm"
   firewall_name           = module.naming.firewall.name
   enable_telemetry        = var.enable_telemetry
