@@ -16,7 +16,7 @@ resource "azurerm_firewall" "azfw" {
 
 // Creating Public IP for the Azure Firewall
 resource "azurerm_public_ip" "pip_azfw" {
-  for_each                = { for ip_configuration in azurerm_firewall.azurerm_firewall.azfw.ip_configuration : ip_configuration => ip_configuration.create_public_ip_address }
+  for_each                = { for ip_configuration in azurerm_firewall.azfw.ip_configuration : ip_configuration => ip_configuration.create_public_ip_address }
   name                    = coalesce(each.value.public_ip_address_name, "pip-${var.firewall_name}")
   resource_group_name     = var.resource_group_name
   location                = var.location

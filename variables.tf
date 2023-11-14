@@ -29,7 +29,7 @@ variable "firewall_sku_name" {
   type        = string
   description = "The name of the Azure Firewall SKU."
   validation {
-    condition     = contains(["AZFW_VNet", "AZFW_Hub"], var.azfw_sku_name)
+    condition     = contains(["AZFW_VNet", "AZFW_Hub"], var.firewall_sku_name)
     error_message = "value must be one of the following: AZFW_VNet, AZFW_Hub"
   }
 }
@@ -55,7 +55,7 @@ variable "subnet_id" {
 
 
 variable "public_ip_address_config" {
-  type = object({
+  type = map(object({
     resource_group_name              = string
     location                         = string
     allocation_method                = string
@@ -71,7 +71,7 @@ variable "public_ip_address_config" {
     ip_tags                          = optional(map(string))
     public_ip_prefix_resource_id     = optional(string)
     tags                             = optional(map(any), {})
-  })
+  }))
   default     = {}
   description = <<DESCRIPTION
   
