@@ -53,7 +53,7 @@ variable "subnet_id" {
   description = "The ID of the subnet where the Azure Firewall will be deployed."
 }
 variable "public_ip_address_config" {
-  type = map(object({
+  type = object({
     resource_group_name              = string
     location                         = string
     allocation_method                = string
@@ -69,8 +69,8 @@ variable "public_ip_address_config" {
     ip_tags                          = optional(map(string), null)
     public_ip_prefix_resource_id     = optional(string, null)
     tags                             = optional(map(any), null)
-  }))
-  default     = {}
+  })
+
   description = <<DESCRIPTION
   
   An object variable that configures the settings that will be the same for all public IPs for this Azure Firewall
