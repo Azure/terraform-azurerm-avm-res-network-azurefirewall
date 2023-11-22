@@ -48,6 +48,11 @@ variable "firewall_ip_config_name" {
   description = "The name of the Azure Firewall IP Config."
 }
 
+variable "firewall_policy_id" {
+  type        = string
+  description = "The ID of the Azure Firewall Policy to be associated with the Azure Firewall."
+}
+
 variable "subnet_id" {
   type        = string
   description = "The ID of the subnet where the Azure Firewall will be deployed."

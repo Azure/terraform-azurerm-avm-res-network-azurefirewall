@@ -6,10 +6,10 @@ resource "azurerm_firewall" "azfw" {
   location            = var.location
   sku_name            = var.firewall_sku_name
   sku_tier            = var.firewall_sku_tier
-  firewall_policy_id  = azurerm_firewall_policy.azfw_policy.id
+  firewall_policy_id  = var.firewall_policy_id
   ip_configuration {
     name                 = var.firewall_ip_config_name
-    subnet_id            = azurerm_subnet_subnet_azfw.id
+    subnet_id            = var.subnet_id
     public_ip_address_id = azurerm_public_ip.pip_azfw.id
   }
 }
