@@ -16,8 +16,7 @@ resource "azurerm_firewall" "azfw" {
 
 // Creating Public IP for the Azure Firewall
 resource "azurerm_public_ip" "pip_azfw" {
-  for_each                = { for ip_configuration in azurerm_firewall.azfw.ip_configuration : ip_configuration => ip_configuration.create_public_ip_address }
-  name                    = coalesce(each.value.public_ip_address_name, "pip-${var.firewall_name}")
+  name                    = "pip-${var.firewall_name}"
   resource_group_name     = var.resource_group_name
   location                = var.location
   allocation_method       = var.public_ip_address_config.allocation_method
@@ -37,14 +36,14 @@ resource "azurerm_public_ip" "pip_azfw" {
 resource "azurerm_management_lock" "this" {
   count      = var.lock.kind != "None" ? 1 : 0
   name       = coalesce(var.lock.name, "lock-${var.firewall_name}")
-  scope      = azurerm_virtual_network.vnet.id
+  scope      = azurerm_firewall.azfw.id
   lock_level = var.lock.kind
 }
 
 # Assigning Roles to the Virtual Network based on the provided configurations.
 resource "azurerm_role_assignment" "this" {
   for_each                               = var.role_assignments
-  scope                                  = azurerm_virtual_network.vnet.id
+  scope                                  = azurerm_firewall.azfw.id
   role_definition_id                     = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? each.value.role_definition_id_or_name : null
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   principal_id                           = each.value.principal_id

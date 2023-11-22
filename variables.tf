@@ -45,32 +45,30 @@ variable "firewall_sku_tier" {
 
 variable "firewall_ip_config_name" {
   type        = string
-  description = "The name of the Azure Firewall IP Configuration."
+  description = "The name of the Azure Firewall IP Config."
 }
 
 variable "subnet_id" {
   type        = string
   description = "The ID of the subnet where the Azure Firewall will be deployed."
 }
-
-
 variable "public_ip_address_config" {
   type = map(object({
     resource_group_name              = string
     location                         = string
     allocation_method                = string
-    zones                            = optional(list(number), "1", "2", "3")
-    sku                              = optional(string, "Standard")
-    sku_tier                         = optional(string, "Regional")
-    ddos_protection_mode             = optional(string, "VirtualNetworkInherited")
-    ddos_protection_plan_resource_id = optional(string)
-    domain_name_label                = optional(string)
-    reverse_fqdn                     = optional(string)
-    idle_timeout_in_minutes          = optional(number, 4)
+    zones                            = optional(list(number), null)
+    sku                              = optional(string, null)
+    sku_tier                         = optional(string, null)
+    ddos_protection_mode             = optional(string, null)
+    ddos_protection_plan_resource_id = optional(string, null)
+    domain_name_label                = optional(string, null)
+    reverse_fqdn                     = optional(string, null)
+    idle_timeout_in_minutes          = optional(number, null)
     ip_version                       = optional(string, "IPv4")
-    ip_tags                          = optional(map(string))
-    public_ip_prefix_resource_id     = optional(string)
-    tags                             = optional(map(any), {})
+    ip_tags                          = optional(map(string), null)
+    public_ip_prefix_resource_id     = optional(string, null)
+    tags                             = optional(map(any), null)
   }))
   default     = {}
   description = <<DESCRIPTION
@@ -95,8 +93,8 @@ variable "public_ip_address_config" {
 
   Example Input:
   ```terraform
-  # Public IP configuration
-  public_ip_configuration =  {
+  # Public IP config
+  public_ip_config =  {
       allocation_method                = "Static"
       ddos_protection_mode             = "VirtualNetworkInherited"
       idle_timeout_in_minutes          = 4
@@ -111,31 +109,31 @@ variable "public_ip_address_config" {
     error_message = "The allocation method must be one of the following: Dynamic, Static"
   }
   validation {
-    condition     = contains(["Disabled", "Enabled", "VirtualNetworkInherited"], var.public_ip_address_configuration.ddos_protection_mode)
+    condition     = contains(["Disabled", "Enabled", "VirtualNetworkInherited"], var.public_ip_address_config.ddos_protection_mode)
     error_message = "The acceptable value for `ddos_protection_mode` are Disabled, Enabled or VirtualNetworkInherited"
   }
   validation {
-    condition     = (contains(["Disabled", "VirtualNetworkInherited"], var.public_ip_address_configuration.ddos_protection_mode) && var.public_ip_address_configuration.ddos_protection_plan_resource_id == null) || (contains(["Enabled"], var.public_ip_address_configuration.ddos_protection_mode) && var.public_ip_address_configuration.ddos_protection_plan_resource_id != null)
+    condition     = (contains(["Disabled", "VirtualNetworkInherited"], var.public_ip_address_config.ddos_protection_mode) && var.public_ip_address_config.ddos_protection_plan_resource_id == null) || (contains(["Enabled"], var.public_ip_address_config.ddos_protection_mode) && var.public_ip_address_config.ddos_protection_plan_resource_id != null)
     error_message = "A `ddos_protection_plan_resource_id` can only be set when `ddos_protection_mode` is set to Enabled"
   }
   validation {
-    condition     = var.public_ip_address_configuration.idle_timeout_in_minutes >= 4 && var.public_ip_address_configuration.idle_timeout_in_minutes <= 30
+    condition     = var.public_ip_address_config.idle_timeout_in_minutes == null ? true : var.public_ip_address_config.idle_timeout_in_minutes >= 4 && var.public_ip_address_config.idle_timeout_in_minutes <= 30
     error_message = "The value for `idle_timeout_in_minutes` must be between 4 and 30"
   }
   validation {
-    condition     = contains(["IPv4", "IPv6"], var.public_ip_address_configuration.ip_version)
+    condition     = contains(["IPv4", "IPv6"], var.public_ip_address_config.ip_version)
     error_message = "The accepted values for `ip_version` are IPv4 or IPv6"
   }
   validation {
-    condition     = (contains(["IPv4", "IPv6"], var.public_ip_address_configuration.ip_version) && var.public_ip_address_configuration.allocation_method == "Static") || (contains(["IPv4"], var.public_ip_address_configuration.ip_version) && var.public_ip_address_configuration.allocation_method == "Dynamic") # Could probably format this to be consistent in line
+    condition     = (contains(["IPv4", "IPv6"], var.public_ip_address_config.ip_version) && var.public_ip_address_config.allocation_method == "Static") || (contains(["IPv4"], var.public_ip_address_config.ip_version) && var.public_ip_address_config.allocation_method == "Dynamic") # Could probably format this to be consistent in line
     error_message = "Only Static `allocation_method` supported for IPv6"
   }
   validation {
-    condition     = contains(["Basic", "Standard"], var.public_ip_address_configuration.sku)
+    condition     = contains(["Basic", "Standard"], var.public_ip_address_config.sku)
     error_message = "The acceptable values for `sku` are Basic or Standard"
   }
   validation {
-    condition     = contains(["Global", "Regional"], var.public_ip_address_configuration.sku_tier)
+    condition     = contains(["Global", "Regional"], var.public_ip_address_config.sku_tier)
     error_message = "The acceptable values for `sku_tier` are Global or Regional"
   }
 }
