@@ -63,9 +63,9 @@ variable "public_ip_address_config" {
     location                         = string
     allocation_method                = string
     zones                            = optional(list(number), null)
-    sku                              = optional(string, null)
-    sku_tier                         = optional(string, null)
-    ddos_protection_mode             = optional(string, null)
+    sku                              = optional(string)
+    sku_tier                         = optional(string)
+    ddos_protection_mode             = optional(string)
     ddos_protection_plan_resource_id = optional(string, null)
     domain_name_label                = optional(string, null)
     reverse_fqdn                     = optional(string, null)
@@ -101,10 +101,8 @@ variable "public_ip_address_config" {
   # Public IP config
   public_ip_config =  {
       allocation_method                = "Static"
-      ddos_protection_mode             = "VirtualNetworkInherited"
-      idle_timeout_in_minutes          = 4
-      ip_version                       = "IPv4"
-      sku_tier                         = "Regional"
+      resource_group_name              = azurerm_resource_group.rg.name
+      location                        = azurerm_resource_group.rg.location
     }
  
   DESCRIPTION

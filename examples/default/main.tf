@@ -8,6 +8,10 @@ terraform {
   }
 }
 
+provider "azurerm" {
+  features {}  
+}
+
 # This picks a random region from the list of regions.
 resource "random_integer" "region_index" {
   min = 0
@@ -36,41 +40,47 @@ resource "azurerm_resource_group" "rg" {
   location = local.azure_regions[random_integer.region_index.result]
 }
 
-module "vnet" {
-  source = "Azure/terraform-azurerm-avm-res-network-virtualnetwork/azurerm" # This is the relative path to the module
-  # source             = "Azure/avm-res-network-virtualnetwork/azurerm"
+resource "azurerm_virtual_network" "vnet" {
   name                = module.naming.virtual_network.name
-  enable_telemetry    = true
   resource_group_name = azurerm_resource_group.rg.name
-  vnet_location       = azurerm_resource_group.rg.location
-  address_space       = "10.0.0.0/16"
-  subnet_prefixes     = ["10.0.0.0/26"]
-  subnet_names        = ["AzureFirewallSubnet"]
-  tags = {
-    environment = "dev"
-  }
+  location            = azurerm_resource_group.rg.location
+  address_space       = ["10.1.0.0/16"]
+}
+resource "azurerm_subnet" "subnet" {
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/26"]
+}
+
+resource "azurerm_firewall_policy" "policy" {
+  name                = module.naming.firewall_policy.name
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
 }
 
 # This is the module call
 module "firewall" {
-  source = "Azure/avm/res-network-firewall/azurerm"
+  source = "../.."
   # source             = "Azure/avm-res-network-firewall/azurerm"
   firewall_name           = module.naming.firewall.name
   enable_telemetry        = var.enable_telemetry
   location                = azurerm_resource_group.rg.location
   resource_group_name     = azurerm_resource_group.rg.name
-  firewall_ip_config_name = module.naming.firewall_ip_configuration.name
   firewall_sku_name       = "AZFW_VNet"
   firewall_sku_tier       = "Standard"
-  subnet_id               = module.vnet.subnet_ids[0]
+  firewall_policy_id      = azurerm_firewall_policy.policy.id
+  subnet_id               = azurerm_subnet.subnet.id
+  firewall_ip_config_name = "AzureFirewallIpConfiguration"
   public_ip_address_config = {
-    allocation_method = "Static"
-    sku               = "Standard"
-    sku_tier          = "Regional"
-  }
-
-  tags = {
-    environment = "dev"
+    allocation_method   = "Static"
+    resource_group_name = azurerm_resource_group.rg.name
+    location            = azurerm_resource_group.rg.location
+    sku                 = "Standard"
+    sku_tier            = "Regional"
+    zones               = ["1", "2", "3"]
+    idle_timeout_in_minutes = 4
+    ip_version = "IPv4"
+    ddos_protection_mode = "VirtualNetworkInherited"
   }
 }
-# ...
