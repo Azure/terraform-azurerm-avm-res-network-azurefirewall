@@ -53,12 +53,6 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.1.0.0/26"]
 }
 
-resource "azurerm_firewall_policy" "policy" {
-  name                = module.naming.firewall_policy.name
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-}
-
 # This is the module call
 module "firewall" {
   source = "../.."
@@ -67,9 +61,8 @@ module "firewall" {
   enable_telemetry        = var.enable_telemetry
   location                = azurerm_resource_group.rg.location
   resource_group_name     = azurerm_resource_group.rg.name
-  firewall_sku_name       = "AZFW_VNet"
+  firewall_sku_name       = "AZFW_VNet" 
   firewall_sku_tier       = "Standard"
-  firewall_policy_id      = azurerm_firewall_policy.policy.id
   subnet_id               = azurerm_subnet.subnet.id
   firewall_ip_config_name = "AzureFirewallIpConfiguration"
   public_ip_address_config = {
@@ -78,7 +71,6 @@ module "firewall" {
     location            = azurerm_resource_group.rg.location
     sku                 = "Standard"
     sku_tier            = "Regional"
-    zones               = ["1", "2", "3"]
     idle_timeout_in_minutes = 4
     ip_version = "IPv4"
     ddos_protection_mode = "VirtualNetworkInherited"
