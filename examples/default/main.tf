@@ -9,7 +9,7 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}  
+  features {}
 }
 
 # This picks a random region from the list of regions.
@@ -61,18 +61,18 @@ module "firewall" {
   enable_telemetry        = var.enable_telemetry
   location                = azurerm_resource_group.rg.location
   resource_group_name     = azurerm_resource_group.rg.name
-  firewall_sku_name       = "AZFW_VNet" 
+  firewall_sku_name       = "AZFW_VNet"
   firewall_sku_tier       = "Standard"
   subnet_id               = azurerm_subnet.subnet.id
   firewall_ip_config_name = "AzureFirewallIpConfiguration"
   public_ip_address_config = {
-    allocation_method   = "Static"
-    resource_group_name = azurerm_resource_group.rg.name
-    location            = azurerm_resource_group.rg.location
-    sku                 = "Standard"
-    sku_tier            = "Regional"
+    allocation_method       = "Static"
+    resource_group_name     = azurerm_resource_group.rg.name
+    location                = azurerm_resource_group.rg.location
+    sku                     = "Standard"
+    sku_tier                = "Regional"
     idle_timeout_in_minutes = 4
-    ip_version = "IPv4"
-    ddos_protection_mode = "VirtualNetworkInherited"
+    ip_version              = "IPv4"
+    ddos_protection_mode    = "VirtualNetworkInherited"
   }
 }

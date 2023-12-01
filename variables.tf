@@ -51,7 +51,7 @@ variable "firewall_ip_config_name" {
 variable "firewall_policy_id" {
   type        = string
   description = "The ID of the Azure Firewall Policy to be associated with the Azure Firewall."
-  default = null
+  default     = null
 }
 
 variable "subnet_id" {
