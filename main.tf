@@ -12,6 +12,7 @@ resource "azurerm_firewall" "azfw" {
     subnet_id            = var.subnet_id
     public_ip_address_id = azurerm_public_ip.pip_azfw.id
   }
+  tags = var.tags
 }
 
 // Creating Public IP for the Azure Firewall
