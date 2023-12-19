@@ -14,14 +14,14 @@ terraform {
   }
 }
 
-variable "enable_telemetry" {
-  type        = bool
-  default     = true
-  description = <<DESCRIPTION
-This variable controls whether or not telemetry is enabled for the module.
-For more information see https://aka.ms/avm/telemetryinfo.
-If it is set to false, then no telemetry will be collected.
-DESCRIPTION
+provider "azurerm" {
+  features {}
+}
+
+# This picks a random region from the list of regions.
+resource "random_integer" "region_index" {
+  min = 0
+  max = length(local.azure_regions) - 1
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -31,17 +31,38 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "this" {
+resource "azurerm_resource_group" "rg" {
   name     = module.naming.resource_group.name_unique
-  location = "MYLOCATION"
+  location = local.azure_regions[random_integer.region_index.result]
+}
+
+resource "azurerm_virtual_network" "vnet" {
+  name                = module.naming.virtual_network.name
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  address_space       = ["10.1.0.0/16"]
+}
+resource "azurerm_subnet" "subnet" {
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/26"]
 }
 
 # This is the module call
-module "MYMODULE" {
-  source = "../../"
-  # source             = "Azure/avm-<res/ptn>-<name>/azurerm"
-  enable_telemetry = var.enable_telemetry
-  # ...
+module "firewall" {
+  source = "../.."
+  # source             = "Azure/avm-res-network-firewall/azurerm"
+  name                          = module.naming.firewall.name
+  location                      = azurerm_resource_group.rg.location
+  resource_group_name           = azurerm_resource_group.rg.name
+  firewall_sku_tier             = "Standard"
+  firewall_sku_name             = "AZFW_VNet"
+  firewall_dns_proxy_enabled    = false
+  public_ip_allocation_method   = "Static"
+  public_ip_location            = azurerm_resource_group.rg.location
+  public_ip_name                = module.naming.public_ip.name
+  public_ip_resource_group_name = azurerm_resource_group.rg.name
 }
 ```
 
@@ -60,11 +81,16 @@ The following providers are used by this module:
 
 - <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
 
+- <a name="provider_random"></a> [random](#provider\_random)
+
 ## Resources
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
+- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -93,9 +119,9 @@ No outputs.
 
 The following Modules are called:
 
-### <a name="module_MYMODULE"></a> [MYMODULE](#module\_MYMODULE)
+### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
-Source: ../../
+Source: ../..
 
 Version:
 
