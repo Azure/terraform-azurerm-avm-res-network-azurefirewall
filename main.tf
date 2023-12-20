@@ -46,7 +46,7 @@ resource "azurerm_firewall" "this" {
   }
 }
 
-// Creating Public IP for the Azure Firewall
+# Creating Public IP for the Azure Firewall
 resource "azurerm_public_ip" "this" {
   allocation_method       = var.public_ip_allocation_method
   ddos_protection_mode    = var.public_ip_ddos_protection_mode
