@@ -64,7 +64,6 @@ module "firewall" {
   resource_group_name           = azurerm_resource_group.rg.name
   firewall_sku_tier             = "Standard"
   firewall_sku_name             = "AZFW_VNet"
-  firewall_dns_proxy_enabled    = false
   public_ip_allocation_method   = "Static"
   public_ip_location            = azurerm_resource_group.rg.location
   public_ip_name                = module.naming.public_ip.name
