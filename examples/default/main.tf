@@ -63,4 +63,5 @@ module "firewall" {
   public_ip_location            = azurerm_resource_group.rg.location
   public_ip_name                = module.naming.public_ip.name
   public_ip_resource_group_name = azurerm_resource_group.rg.name
+  firewall_zones                = ["1", "2", "3"]
 }

@@ -4,7 +4,6 @@ resource "azurerm_firewall" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = var.firewall_sku_name
   sku_tier            = var.firewall_sku_tier
-  dns_proxy_enabled   = var.firewall_dns_proxy_enabled
   dns_servers         = var.firewall_dns_servers
   firewall_policy_id  = var.firewall_policy_id
   private_ip_ranges   = var.firewall_private_ip_ranges
