@@ -143,14 +143,6 @@ Type: `bool`
 
 Default: `true`
 
-### <a name="input_firewall_dns_proxy_enabled"></a> [firewall\_dns\_proxy\_enabled](#input\_firewall\_dns\_proxy\_enabled)
-
-Description: (Optional) Whether DNS proxy is enabled. It will forward DNS requests to the DNS servers when set to `true`. It will be set to `true` if `dns_servers` provided with a not empty list.
-
-Type: `bool`
-
-Default: `null`
-
 ### <a name="input_firewall_dns_servers"></a> [firewall\_dns\_servers](#input\_firewall\_dns\_servers)
 
 Description: (Optional) A list of DNS servers that the Azure Firewall will direct DNS traffic to the for name resolution.

@@ -27,12 +27,6 @@ variable "firewall_sku_tier" {
   nullable    = false
 }
 
-variable "firewall_dns_proxy_enabled" {
-  type        = bool
-  default     = null
-  description = "(Optional) Whether DNS proxy is enabled. It will forward DNS requests to the DNS servers when set to `true`. It will be set to `true` if `dns_servers` provided with a not empty list."
-}
-
 variable "firewall_dns_servers" {
   type        = list(string)
   default     = null
