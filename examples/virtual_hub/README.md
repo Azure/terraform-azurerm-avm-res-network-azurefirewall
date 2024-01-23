@@ -38,7 +38,7 @@ module "naming" {
 # This is required for resource modules
 resource "azurerm_resource_group" "rg" {
   name     = module.naming.resource_group.name_unique
-  location = "eastus"
+  location = local.azure_regions[random_integer.region_index.result]
 }
 
 resource "azurerm_virtual_wan" "vwan" {
