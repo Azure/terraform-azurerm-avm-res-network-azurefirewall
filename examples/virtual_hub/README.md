@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Default example
+# Vhub Example
 
-This deploys the Azure Firewall with a Virtual Network.
+This deploys the Azure Firewall with a Virtual Hub and a Virtual WAN.
 
 ```hcl
 terraform {
@@ -41,17 +41,19 @@ resource "azurerm_resource_group" "rg" {
   location = local.azure_regions[random_integer.region_index.result]
 }
 
-resource "azurerm_virtual_network" "vnet" {
-  name                = module.naming.virtual_network.name
+resource "azurerm_virtual_wan" "vwan" {
+  name                = module.naming.virtual_wan.name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  address_space       = ["10.1.0.0/16"]
+  type                = "Standard"
 }
-resource "azurerm_subnet" "subnet" {
-  name                 = "AzureFirewallSubnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.1.0.0/26"]
+
+resource "azurerm_virtual_hub" "vhub" {
+  name                = "virtual-hub"
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  virtual_wan_id      = azurerm_virtual_wan.vwan.id
+  address_prefix      = "10.1.0.0/16"
 }
 
 # This is the module call
@@ -63,12 +65,16 @@ module "firewall" {
   location                      = azurerm_resource_group.rg.location
   resource_group_name           = azurerm_resource_group.rg.name
   firewall_sku_tier             = "Standard"
-  firewall_sku_name             = "AZFW_VNet"
+  firewall_sku_name             = "AZFW_Hub"
   public_ip_allocation_method   = "Static"
   public_ip_location            = azurerm_resource_group.rg.location
   public_ip_name                = module.naming.public_ip.name
   public_ip_resource_group_name = azurerm_resource_group.rg.name
   firewall_zones                = ["1", "2", "3"]
+  firewall_virtual_hub = {
+    virtual_hub_id  = azurerm_virtual_hub.vhub.id
+    public_ip_count = 1
+  }
 }
 ```
 
@@ -96,8 +102,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azurerm_virtual_hub.vhub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub) (resource)
+- [azurerm_virtual_wan.vwan](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_wan) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
