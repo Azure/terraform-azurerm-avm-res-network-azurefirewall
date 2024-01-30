@@ -18,7 +18,6 @@ jobs:
   docs:
     if: github.event.repository.name != 'terraform-azurerm-avm-template'
     name: docs
-
     runs-on: ubuntu-latest
     steps:
       - name: checkout repository
