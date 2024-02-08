@@ -60,20 +60,16 @@ resource "azurerm_virtual_hub" "vhub" {
 module "firewall" {
   source = "../.."
   # source             = "Azure/avm-res-network-firewall/azurerm"
-  name                          = module.naming.firewall.name
-  enable_telemetry              = var.enable_telemetry
-  location                      = azurerm_resource_group.rg.location
-  resource_group_name           = azurerm_resource_group.rg.name
-  firewall_sku_tier             = "Standard"
-  firewall_sku_name             = "AZFW_Hub"
-  public_ip_allocation_method   = "Static"
-  public_ip_location            = azurerm_resource_group.rg.location
-  public_ip_name                = module.naming.public_ip.name
-  public_ip_resource_group_name = azurerm_resource_group.rg.name
-  firewall_zones                = ["1", "2", "3"]
+  name                = module.naming.firewall.name
+  enable_telemetry    = var.enable_telemetry
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  firewall_sku_tier   = "Standard"
+  firewall_sku_name   = "AZFW_Hub"
+  firewall_zones      = ["1", "2", "3"]
   firewall_virtual_hub = {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
-    public_ip_count = 1
+    public_ip_count = 2
   }
 }
 ```
