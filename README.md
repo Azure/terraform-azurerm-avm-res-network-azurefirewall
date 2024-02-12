@@ -31,7 +31,6 @@ The following resources are used by this module:
 - [azurerm_firewall.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall) (resource)
 - [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
 - [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_public_ip.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group_template_deployment.telemetry](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group_template_deployment) (resource)
 - [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
 - [random_id.telem](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) (resource)
@@ -65,30 +64,6 @@ Description: (Required) Specifies the name of the Firewall. Changing this forces
 
 Type: `string`
 
-### <a name="input_public_ip_allocation_method"></a> [public\_ip\_allocation\_method](#input\_public\_ip\_allocation\_method)
-
-Description: (Required) Defines the allocation method for this IP address. Possible values are `Static` or `Dynamic`.
-
-Type: `string`
-
-### <a name="input_public_ip_location"></a> [public\_ip\_location](#input\_public\_ip\_location)
-
-Description: (Required) Specifies the supported Azure location where the Public IP should exist. Changing this forces a new resource to be created.
-
-Type: `string`
-
-### <a name="input_public_ip_name"></a> [public\_ip\_name](#input\_public\_ip\_name)
-
-Description: (Required) Specifies the name of the Public IP. Changing this forces a new Public IP to be created.
-
-Type: `string`
-
-### <a name="input_public_ip_resource_group_name"></a> [public\_ip\_resource\_group\_name](#input\_public\_ip\_resource\_group\_name)
-
-Description: (Required) The name of the Resource Group where this Public IP should exist. Changing this forces a new Public IP to be created.
-
-Type: `string`
-
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
 Description: (Required) The name of the resource group in which to create the resource. Changing this forces a new resource to be created.
@@ -101,7 +76,7 @@ The following input variables are optional (have default values):
 
 ### <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings)
 
-Description:   A map of diagnostic settings to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description:   A map of diagnostic settings to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
   - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
@@ -271,133 +246,9 @@ object({
 
 Default: `{}`
 
-### <a name="input_public_ip_ddos_protection_mode"></a> [public\_ip\_ddos\_protection\_mode](#input\_public\_ip\_ddos\_protection\_mode)
-
-Description: (Optional) The DDoS protection mode of the public IP. Possible values are `Disabled`, `Enabled`, and `VirtualNetworkInherited`. Defaults to `VirtualNetworkInherited`.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_ddos_protection_plan_id"></a> [public\_ip\_ddos\_protection\_plan\_id](#input\_public\_ip\_ddos\_protection\_plan\_id)
-
-Description: (Optional) The ID of DDoS protection plan associated with the public IP.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_domain_name_label"></a> [public\_ip\_domain\_name\_label](#input\_public\_ip\_domain\_name\_label)
-
-Description: (Optional) Label for the Domain Name. Will be used to make up the FQDN. If a domain name label is specified, an A DNS record is created for the public IP in the Microsoft Azure DNS system.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_edge_zone"></a> [public\_ip\_edge\_zone](#input\_public\_ip\_edge\_zone)
-
-Description: (Optional) Specifies the Edge Zone within the Azure Region where this Public IP should exist. Changing this forces a new Public IP to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_idle_timeout_in_minutes"></a> [public\_ip\_idle\_timeout\_in\_minutes](#input\_public\_ip\_idle\_timeout\_in\_minutes)
-
-Description: (Optional) Specifies the timeout for the TCP idle connection. The value can be set between 4 and 30 minutes.
-
-Type: `number`
-
-Default: `null`
-
-### <a name="input_public_ip_ip_tags"></a> [public\_ip\_ip\_tags](#input\_public\_ip\_ip\_tags)
-
-Description: (Optional) A mapping of IP tags to assign to the public IP. Changing this forces a new resource to be created.
-
-Type: `map(string)`
-
-Default: `null`
-
-### <a name="input_public_ip_ip_version"></a> [public\_ip\_ip\_version](#input\_public\_ip\_ip\_version)
-
-Description: (Optional) The IP Version to use, IPv6 or IPv4. Changing this forces a new resource to be created. Defaults to `IPv4`.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_public_ip_prefix_id"></a> [public\_ip\_public\_ip\_prefix\_id](#input\_public\_ip\_public\_ip\_prefix\_id)
-
-Description: (Optional) If specified then public IP address allocated will be provided from the public IP prefix resource. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_reverse_fqdn"></a> [public\_ip\_reverse\_fqdn](#input\_public\_ip\_reverse\_fqdn)
-
-Description: (Optional) A fully qualified domain name that resolves to this public IP address. If the reverseFqdn is specified, then a PTR DNS record is created pointing from the IP address in the in-addr.arpa domain to the reverse FQDN.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_sku"></a> [public\_ip\_sku](#input\_public\_ip\_sku)
-
-Description: (Optional) The SKU of the Public IP. Accepted values are `Basic` and `Standard`. Defaults to `Basic`. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_sku_tier"></a> [public\_ip\_sku\_tier](#input\_public\_ip\_sku\_tier)
-
-Description: (Optional) The SKU Tier that should be used for the Public IP. Possible values are `Regional` and `Global`. Defaults to `Regional`. Changing this forces a new resource to be created.
-
-Type: `string`
-
-Default: `null`
-
-### <a name="input_public_ip_tags"></a> [public\_ip\_tags](#input\_public\_ip\_tags)
-
-Description: (Optional) A mapping of tags to assign to the resource.
-
-Type: `map(string)`
-
-Default: `null`
-
-### <a name="input_public_ip_timeouts"></a> [public\_ip\_timeouts](#input\_public\_ip\_timeouts)
-
-Description: - `create` - (Defaults to 30 minutes) Used when creating the Public IP.
-- `delete` - (Defaults to 30 minutes) Used when deleting the Public IP.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Public IP.
-- `update` - (Defaults to 30 minutes) Used when updating the Public IP.
-
-Type:
-
-```hcl
-object({
-    create = optional(string)
-    delete = optional(string)
-    read   = optional(string)
-    update = optional(string)
-  })
-```
-
-Default: `null`
-
-### <a name="input_public_ip_zones"></a> [public\_ip\_zones](#input\_public\_ip\_zones)
-
-Description: (Optional) A collection containing the availability zone to allocate the Public IP in. Changing this forces a new resource to be created.
-
-Type: `set(string)`
-
-Default: `null`
-
 ### <a name="input_role_assignments"></a> [role\_assignments](#input\_role\_assignments)
 
-Description:   A map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+Description:   A map of role assignments to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.

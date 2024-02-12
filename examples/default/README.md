@@ -54,21 +54,33 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.1.0.0/26"]
 }
 
+resource "azurerm_public_ip" "public_ip" {
+  name                = module.naming.public_ip.name
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  zones               = ["1", "2", "3"]
+}
+
 # This is the module call
 module "firewall" {
   source = "../.."
   # source             = "Azure/avm-res-network-firewall/azurerm"
-  name                          = module.naming.firewall.name
-  enable_telemetry              = var.enable_telemetry
-  location                      = azurerm_resource_group.rg.location
-  resource_group_name           = azurerm_resource_group.rg.name
-  firewall_sku_tier             = "Standard"
-  firewall_sku_name             = "AZFW_VNet"
-  public_ip_allocation_method   = "Static"
-  public_ip_location            = azurerm_resource_group.rg.location
-  public_ip_name                = module.naming.public_ip.name
-  public_ip_resource_group_name = azurerm_resource_group.rg.name
-  firewall_zones                = ["1", "2", "3"]
+  name                = module.naming.firewall.name
+  enable_telemetry    = var.enable_telemetry
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  firewall_sku_tier   = "Standard"
+  firewall_sku_name   = "AZFW_VNet"
+  firewall_zones      = ["1", "2", "3"]
+  firewall_ip_configuration = [
+    {
+      name                 = "ipconfig1"
+      subnet_id            = azurerm_subnet.subnet.id
+      public_ip_address_id = azurerm_public_ip.public_ip.id
+    }
+  ]
 }
 ```
 
@@ -95,6 +107,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
+- [azurerm_public_ip.public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
