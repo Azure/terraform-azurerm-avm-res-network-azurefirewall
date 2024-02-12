@@ -60,7 +60,6 @@ resource "azurerm_public_ip" "public_ip" {
   location            = azurerm_resource_group.rg.location
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = ["1", "2", "3"]
 }
 
 # This is the module call
