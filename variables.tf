@@ -27,6 +27,12 @@ variable "firewall_sku_tier" {
   nullable    = false
 }
 
+variable "firewall_zones" {
+  type        = set(string)
+  nullable    = false
+  description = "(Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created."
+}
+
 variable "firewall_dns_servers" {
   type        = list(string)
   default     = null
@@ -111,12 +117,6 @@ variable "firewall_virtual_hub" {
  - `public_ip_count` - (Optional) Specifies the number of public IPs to assign to the Firewall. Defaults to `1`.
  - `virtual_hub_id` - (Required) Specifies the ID of the Virtual Hub where the Firewall resides in.
 EOT
-}
-
-variable "firewall_zones" {
-  type        = set(string)
-  default     = null
-  description = "(Optional) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created."
 }
 
 variable "lock" {
