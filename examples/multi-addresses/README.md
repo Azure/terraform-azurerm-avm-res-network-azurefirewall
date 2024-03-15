@@ -70,6 +70,7 @@ resource "azurerm_public_ip" "public_ip" {
   allocation_method   = "Static"
   sku                 = "Standard"
   public_ip_prefix_id = azurerm_public_ip_prefix.public_ip_prefix.id
+  zones               = ["1", "2", "3"]
 }
 
 # This is the module call

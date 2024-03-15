@@ -224,11 +224,19 @@ Default: `null`
 
 ### <a name="input_firewall_zones"></a> [firewall\_zones](#input\_firewall\_zones)
 
-Description: (Optional) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created.
+Description: (Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created.
 
 Type: `set(string)`
 
-Default: `null`
+Default:
+
+```json
+[
+  "1",
+  "2",
+  "3"
+]
+```
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
