@@ -52,12 +52,6 @@ Description: (Required) SKU tier of the Firewall. Possible values are `Premium`,
 
 Type: `string`
 
-### <a name="input_firewall_zones"></a> [firewall\_zones](#input\_firewall\_zones)
-
-Description: (Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created.
-
-Type: `set(string)`
-
 ### <a name="input_location"></a> [location](#input\_location)
 
 Description: (Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
@@ -227,6 +221,22 @@ object({
 ```
 
 Default: `null`
+
+### <a name="input_firewall_zones"></a> [firewall\_zones](#input\_firewall\_zones)
+
+Description: (Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created.
+
+Type: `set(string)`
+
+Default:
+
+```json
+[
+  "1",
+  "2",
+  "3"
+]
+```
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 

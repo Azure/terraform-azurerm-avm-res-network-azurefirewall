@@ -29,7 +29,7 @@ variable "firewall_sku_tier" {
 
 variable "firewall_zones" {
   type        = set(string)
-  nullable    = false
+  default     = ["1", "2", "3"]
   description = "(Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created."
 }
 
