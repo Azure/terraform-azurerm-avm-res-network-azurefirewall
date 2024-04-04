@@ -299,9 +299,17 @@ The following outputs are exported:
 
 Description: The ID of the Azure Firewall.
 
-### <a name="output_name"></a> [name](#output\_name)
+### <a name="output_ip_configuration"></a> [ip\_configuration](#output\_ip\_configuration)
 
-Description: The name of the Azure Firewall.
+Description: The IP Configuration of the Azure Firewall.
+
+### <a name="output_resource"></a> [resource](#output\_resource)
+
+Description: The Resource of the Azure Firewall.
+
+### <a name="output_virtual_hub"></a> [virtual\_hub](#output\_virtual\_hub)
+
+Description: The Virtual Hub of the Azure Firewall.
 
 ## Modules
 
