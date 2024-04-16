@@ -1,18 +1,11 @@
 output "resource" {
   value       = azurerm_firewall.this
-  description = "The Resource of the Azure Firewall."
+  description = <<-EOT
+  "The Resource of the Azure Firewall. This is the default output for the module following AVM standards. Review the examples below for the correct output to use in your module."
+  Examples:
+  - module.firewall.resource.id
+  - module.firewall.resource.name
+  - module.firewall.resource.ip_configuration
+  - module.firewall.resource.virtual_hub
+  EOT
 }
-
-output "ip_configuration" {
-  value       = azurerm_firewall.this
-  description = "The IP Configuration of the Azure Firewall."
-}
-
-output "virtual_hub" {
-  value       = azurerm_firewall.this
-  description = "The Virtual Hub of the Azure Firewall."
-}
-
-
-
-
