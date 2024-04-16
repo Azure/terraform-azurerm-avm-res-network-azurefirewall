@@ -45,15 +45,6 @@ resource "azurerm_firewall" "this" {
   }
 }
 
-# Applying Management Lock to the Firewall if specified.
-resource "azurerm_management_lock" "this" {
-  count = var.lock.kind != "None" ? 1 : 0
-
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
-  scope      = azurerm_firewall.this.id
-}
-
 # Assigning Roles to the Firewall based on the provided configurations.
 resource "azurerm_role_assignment" "this" {
   for_each                               = var.role_assignments

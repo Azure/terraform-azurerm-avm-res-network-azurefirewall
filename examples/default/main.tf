@@ -12,7 +12,6 @@ terraform {
   }
 }
 
-
 provider "azurerm" {
   features {}
 }
@@ -41,6 +40,7 @@ resource "azurerm_virtual_network" "vnet" {
   location            = azurerm_resource_group.rg.location
   address_space       = ["10.1.0.0/16"]
 }
+
 resource "azurerm_subnet" "subnet" {
   name                 = "AzureFirewallSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
@@ -75,4 +75,14 @@ module "firewall" {
       public_ip_address_id = azurerm_public_ip.public_ip.id
     }
   ]
+  firewall_policy_id = module.firewall_policy.resource.id
 }
+
+module "firewall_policy" {
+  source             = "Azure/avm-res-network-firewallpolicy/azurerm"
+  enable_telemetry    = var.enable_telemetry
+  name                = module.naming.firewall_policy.name_unique
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name 
+}
+

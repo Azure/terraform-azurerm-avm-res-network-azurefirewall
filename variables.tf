@@ -120,34 +120,38 @@ EOT
 }
 
 variable "lock" {
-  type = object({
-    name = optional(string, null)
-    kind = optional(string, "None")
-
-
-  })
-  default     = {}
-  description = "The lock level to apply to the Virtual Network. Default is `None`. Possible values are `None`, `CanNotDelete`, and `ReadOnly`."
-  nullable    = false
-
-  validation {
-    condition     = contains(["CanNotDelete", "ReadOnly", "None"], var.lock.kind)
-    error_message = "The lock level must be one of: 'None', 'CanNotDelete', or 'ReadOnly'."
+    type = object({
+      kind = string
+      name = optional(string, null)
+    })
+    default     = null
+    description = <<DESCRIPTION
+  Controls the Resource Lock configuration for this resource. The following properties can be specified:
+  
+  - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
+  - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  DESCRIPTION
+  
+    validation {
+      condition     = var.lock != null ? contains(["CanNotDelete", "ReadOnly"], var.lock.kind) : true
+      error_message = "Lock kind must be either `\"CanNotDelete\"` or `\"ReadOnly\"`."
+    }
   }
-}
+
 variable "role_assignments" {
-  type = map(object({
-    role_definition_id_or_name             = string
-    principal_id                           = string
-    description                            = optional(string, null)
-    skip_service_principal_aad_check       = optional(bool, false)
-    condition                              = optional(string, null)
-    condition_version                      = optional(string, null)
-    delegated_managed_identity_resource_id = optional(string, null)
-  }))
-  default     = {}
-  description = <<DESCRIPTION
-  A map of role assignments to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
+    type = map(object({
+      role_definition_id_or_name             = string
+      principal_id                           = string
+      description                            = optional(string, null)
+      skip_service_principal_aad_check       = optional(bool, false)
+      condition                              = optional(string, null)
+      condition_version                      = optional(string, null)
+      delegated_managed_identity_resource_id = optional(string, null)
+    }))
+    default     = {}
+    nullable    = false
+    description = <<DESCRIPTION
+  A map of role assignments to create on the Key Vault. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
   
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
@@ -158,7 +162,11 @@ variable "role_assignments" {
   
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
-}
+  }
+  
+  locals {
+    role_definition_resource_substring = "providers/Microsoft.Authorization/roleDefinitions"
+  }
 
 variable "diagnostic_settings" {
   type = map(object({
