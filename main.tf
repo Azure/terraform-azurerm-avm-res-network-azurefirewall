@@ -4,11 +4,9 @@ resource "azurerm_firewall" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = var.firewall_sku_name
   sku_tier            = var.firewall_sku_tier
-  dns_servers         = var.firewall_dns_servers
   firewall_policy_id  = var.firewall_policy_id
   private_ip_ranges   = var.firewall_private_ip_ranges
   tags                = var.tags
-  threat_intel_mode   = var.firewall_threat_intel_mode
   zones               = var.firewall_zones
 
   dynamic "ip_configuration" {

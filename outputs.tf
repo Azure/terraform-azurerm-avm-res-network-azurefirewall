@@ -1,7 +1,7 @@
 output "resource" {
   value       = azurerm_firewall.this
   description = <<-EOT
-  "The Resource of the Azure Firewall. This is the default output for the module following AVM standards. Review the examples below for the correct output to use in your module."
+  "This is the full output for the resource. This is the default output for the module following AVM standards. Review the examples below for the correct output to use in your module."
   Examples:
   - module.firewall.resource.id
   - module.firewall.resource.name
