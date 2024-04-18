@@ -63,6 +63,6 @@ module "firewall" {
   firewall_virtual_hub = {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
     public_ip_count = 4
-  }  
+  }
 }
 

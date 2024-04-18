@@ -18,7 +18,6 @@ terraform {
   }
 }
 
-
 provider "azurerm" {
   features {}
 }
@@ -71,17 +70,8 @@ module "firewall" {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
     public_ip_count = 4
   }
-  firewall_policy_id = module.firewall_policy.resource.id
 }
 
-module "firewall_policy" {
-  source = "Azure/avm-res-network-firewallpolicy/azurerm"
-  # source             = "Azure/avm-res-network-firewall/azurerm"
-  name                = module.naming.firewall_policy.name
-  enable_telemetry    = var.enable_telemetry
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-}
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -142,12 +132,6 @@ The following Modules are called:
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
 Source: ../..
-
-Version:
-
-### <a name="module_firewall_policy"></a> [firewall\_policy](#module\_firewall\_policy)
-
-Source: Azure/avm-res-network-firewallpolicy/azurerm
 
 Version:
 

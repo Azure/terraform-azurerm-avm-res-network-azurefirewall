@@ -54,13 +54,19 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.1.0.0/26"]
 }
 
-resource "azurerm_public_ip" "public_ip" {
-  name                = module.naming.public_ip.name
-  resource_group_name = azurerm_resource_group.rg.name
+module "fw_public_ip" {
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.1.0"
+  # insert the 3 required variables here
+  name                = "pip-fw-terraform"
   location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
   sku                 = "Standard"
-  zones               = ["1", "2", "3"]
+  tags = {
+    deployment = "terraform"
+  }
+  zones = ["1", "2", "3"]
 }
 
 # This is the module call
@@ -78,10 +84,11 @@ module "firewall" {
     {
       name                 = "ipconfig1"
       subnet_id            = azurerm_subnet.subnet.id
-      public_ip_address_id = azurerm_public_ip.public_ip.id
+      public_ip_address_id = module.fw_public_ip.public_ip_id
     }
   ]
 }
+
 ```
 
 <!-- markdownlint-disable MD033 -->
@@ -107,7 +114,6 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_public_ip.public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
 - [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
@@ -145,6 +151,12 @@ The following Modules are called:
 Source: ../..
 
 Version:
+
+### <a name="module_fw_public_ip"></a> [fw\_public\_ip](#module\_fw\_public\_ip)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.1.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
