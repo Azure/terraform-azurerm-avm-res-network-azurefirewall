@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# Vhub Example
+# virtual\_hub Example
 
-This deploys the Azure Firewall with a Virtual Hub and a Virtual WAN.
+This deploys the Azure Firewall and Firewall Policy with a Virtual Hub and a Virtual WAN.
 
 ```hcl
 terraform {
@@ -70,7 +70,18 @@ module "firewall" {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
     public_ip_count = 4
   }
+  firewall_policy_id = module.fw_policy.resource.id
 }
+
+module "fw_policy" {
+  source = "Azure/avm-res-network-firewallpolicy/azurerm"
+  # insert the 3 required variables here
+  version             = ">=0.1.0"
+  name                = module.naming.firewall_policy.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 
 ```
 
@@ -134,6 +145,12 @@ The following Modules are called:
 Source: ../..
 
 Version:
+
+### <a name="module_fw_policy"></a> [fw\_policy](#module\_fw\_policy)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm
+
+Version: >=0.1.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 

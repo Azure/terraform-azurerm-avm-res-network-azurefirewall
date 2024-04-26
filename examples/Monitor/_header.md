@@ -1,3 +1,3 @@
-# Default example
+# Diagnostic settings example
 
-This deploys the Azure Firewall with a Virtual Network.
+This deploys the diagnostics settings for Azure Firewall. 

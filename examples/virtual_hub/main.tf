@@ -64,5 +64,16 @@ module "firewall" {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
     public_ip_count = 4
   }
+  firewall_policy_id = module.fw_policy.resource.id
 }
+
+module "fw_policy" {
+  source = "Azure/avm-res-network-firewallpolicy/azurerm"
+  # insert the 3 required variables here
+  version             = ">=0.1.0"
+  name                = module.naming.firewall_policy.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 

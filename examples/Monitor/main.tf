@@ -63,6 +63,14 @@ module "fw_public_ip" {
   zones = ["1", "2", "3"]
 }
 
+module "fwpolicy" {
+  source              = "Azure/avm-res-network-firewallpolicy/azurerm"
+  version             = ">=0.1.0"
+  name                = module.naming.firewall_policy.name_unique
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
 # This is the module call
 module "firewall" {
   source = "../.."
@@ -74,6 +82,7 @@ module "firewall" {
   firewall_sku_tier   = "Standard"
   firewall_sku_name   = "AZFW_VNet"
   firewall_zones      = ["1", "2", "3"]
+  firewall_policy_id  = module.fwpolicy.resource.id
   firewall_ip_configuration = [
     {
       name                 = "ipconfig1"
@@ -81,5 +90,25 @@ module "firewall" {
       public_ip_address_id = module.fw_public_ip.public_ip_id
     }
   ]
+  diagnostic_settings = {
+    to_law = {
+      name                  = "diag"
+      workspace_resource_id = module.law.resource.id
+      log_groups            = ["allLogs"]
+      metric_categories     = ["AllMetrics"]
+    }
+  }
 }
+
+module "law" {
+  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
+  version = ">=0.1.0"
+  # insert the 3 required variables here
+  name                = "thislaworkspace"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
+
+
+
 

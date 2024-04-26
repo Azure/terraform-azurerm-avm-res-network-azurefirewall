@@ -69,6 +69,12 @@ module "fw_public_ip" {
   zones = ["1", "2", "3"]
 }
 
+module "fwpolicy" {
+  source              = "Azure/avm-res-network-firewallpolicy/azurerm"
+  name                = module.naming.firewall_policy.name_unique
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+}
 # This is the module call
 module "firewall" {
   source = "../.."
@@ -157,6 +163,12 @@ Version:
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
 Version: 0.1.0
+
+### <a name="module_fwpolicy"></a> [fwpolicy](#module\_fwpolicy)
+
+Source: Azure/avm-res-network-firewallpolicy/azurerm
+
+Version:
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
