@@ -1,14 +1,14 @@
-# We pick a random region from this list.
+
 locals {
   azure_regions = [
     "westeurope",
     "northeurope",
     "eastus",
     "eastus2",
-    "westus",
+    "westus3",
     "westus2",
     "southcentralus",
-    "northcentralus",
+    "canadacentral",
     "centralus",
     "eastasia",
     "southeastasia",

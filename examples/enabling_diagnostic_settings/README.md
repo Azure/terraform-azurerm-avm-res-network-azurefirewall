@@ -1,7 +1,7 @@
 <!-- BEGIN_TF_DOCS -->
-# virtual\_hub Example
+# Diagnostic settings example
 
-This deploys the Azure Firewall and Firewall Policy with a Virtual Hub and a Virtual WAN.
+This deploys the diagnostics settings for Azure Firewall.
 
 ```hcl
 terraform {
@@ -40,19 +40,41 @@ resource "azurerm_resource_group" "rg" {
   location = local.azure_regions[random_integer.region_index.result]
 }
 
-resource "azurerm_virtual_wan" "vwan" {
-  name                = module.naming.virtual_wan.name
+resource "azurerm_virtual_network" "vnet" {
+  name                = module.naming.virtual_network.name
   resource_group_name = azurerm_resource_group.rg.name
   location            = azurerm_resource_group.rg.location
-  type                = "Standard"
+  address_space       = ["10.1.0.0/16"]
 }
 
-resource "azurerm_virtual_hub" "vhub" {
-  name                = "virtual-hub"
-  resource_group_name = azurerm_resource_group.rg.name
+resource "azurerm_subnet" "subnet" {
+  name                 = "AzureFirewallSubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/26"]
+}
+
+module "fw_public_ip" {
+  source  = "Azure/avm-res-network-publicipaddress/azurerm"
+  version = "0.1.0"
+  # insert the 3 required variables here
+  name                = "pip-fw-terraform"
   location            = azurerm_resource_group.rg.location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
-  address_prefix      = "10.1.0.0/16"
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags = {
+    deployment = "terraform"
+  }
+  zones = ["1", "2", "3"]
+}
+
+module "fwpolicy" {
+  source              = "Azure/avm-res-network-firewallpolicy/azurerm"
+  version             = ">=0.1.0"
+  name                = module.naming.firewall_policy.name_unique
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 }
 
 # This is the module call
@@ -64,23 +86,36 @@ module "firewall" {
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   firewall_sku_tier   = "Standard"
-  firewall_sku_name   = "AZFW_Hub"
+  firewall_sku_name   = "AZFW_VNet"
   firewall_zones      = ["1", "2", "3"]
-  firewall_virtual_hub = {
-    virtual_hub_id  = azurerm_virtual_hub.vhub.id
-    public_ip_count = 4
+  firewall_policy_id  = module.fwpolicy.resource.id
+  firewall_ip_configuration = [
+    {
+      name                 = "ipconfig1"
+      subnet_id            = azurerm_subnet.subnet.id
+      public_ip_address_id = module.fw_public_ip.public_ip_id
+    }
+  ]
+  diagnostic_settings = {
+    to_law = {
+      name                  = "diag"
+      workspace_resource_id = module.law.resource.id
+      log_groups            = ["allLogs"]
+      metric_categories     = ["AllMetrics"]
+    }
   }
-  firewall_policy_id = module.fw_policy.resource.id
 }
 
-module "fw_policy" {
-  source = "Azure/avm-res-network-firewallpolicy/azurerm"
+module "law" {
+  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
+  version = ">=0.1.0"
   # insert the 3 required variables here
-  version             = ">=0.1.0"
-  name                = module.naming.firewall_policy.name
+  name                = "thislaworkspace"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 }
+
+
 
 
 ```
@@ -109,8 +144,8 @@ The following providers are used by this module:
 The following resources are used by this module:
 
 - [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_virtual_hub.vhub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_hub) (resource)
-- [azurerm_virtual_wan.vwan](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_wan) (resource)
+- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
+- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -146,9 +181,21 @@ Source: ../..
 
 Version:
 
-### <a name="module_fw_policy"></a> [fw\_policy](#module\_fw\_policy)
+### <a name="module_fw_public_ip"></a> [fw\_public\_ip](#module\_fw\_public\_ip)
+
+Source: Azure/avm-res-network-publicipaddress/azurerm
+
+Version: 0.1.0
+
+### <a name="module_fwpolicy"></a> [fwpolicy](#module\_fwpolicy)
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
+
+Version: >=0.1.0
+
+### <a name="module_law"></a> [law](#module\_law)
+
+Source: Azure/avm-res-operationalinsights-workspace/azurerm
 
 Version: >=0.1.0
 

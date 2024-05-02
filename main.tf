@@ -4,11 +4,9 @@ resource "azurerm_firewall" "this" {
   resource_group_name = var.resource_group_name
   sku_name            = var.firewall_sku_name
   sku_tier            = var.firewall_sku_tier
-  dns_servers         = var.firewall_dns_servers
   firewall_policy_id  = var.firewall_policy_id
   private_ip_ranges   = var.firewall_private_ip_ranges
   tags                = var.tags
-  threat_intel_mode   = var.firewall_threat_intel_mode
   zones               = var.firewall_zones
 
   dynamic "ip_configuration" {
@@ -43,15 +41,6 @@ resource "azurerm_firewall" "this" {
       public_ip_count = virtual_hub.value.public_ip_count
     }
   }
-}
-
-# Applying Management Lock to the Firewall if specified.
-resource "azurerm_management_lock" "this" {
-  count = var.lock.kind != "None" ? 1 : 0
-
-  lock_level = var.lock.kind
-  name       = coalesce(var.lock.name, "lock-${var.name}")
-  scope      = azurerm_firewall.this.id
 }
 
 # Assigning Roles to the Firewall based on the provided configurations.
