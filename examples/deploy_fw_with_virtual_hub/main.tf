@@ -18,8 +18,8 @@ provider "azurerm" {
 
 # This picks a random region from the list of regions.
 resource "random_integer" "region_index" {
-  min = 0
   max = length(local.azure_regions) - 1
+  min = 0
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -30,23 +30,23 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "rg" {
-  name     = module.naming.resource_group.name_unique
   location = local.azure_regions[random_integer.region_index.result]
+  name     = module.naming.resource_group.name_unique
 }
 
 resource "azurerm_virtual_wan" "vwan" {
+  location            = azurerm_resource_group.rg.location
   name                = module.naming.virtual_wan.name
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
   type                = "Standard"
 }
 
 resource "azurerm_virtual_hub" "vhub" {
+  location            = azurerm_resource_group.rg.location
   name                = "virtual-hub"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
   address_prefix      = "10.1.0.0/16"
+  virtual_wan_id      = azurerm_virtual_wan.vwan.id
 }
 
 # This is the module call
@@ -70,7 +70,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version             = ">=0.1.0"
+  version             = ">=0.2.0"
   name                = module.naming.firewall_policy.name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
