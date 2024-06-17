@@ -12,5 +12,5 @@ output "resource" {
 
 output "resource_id" {
   description = "This is the resource id for the firewall resource."
-  value       = azurerm_firewall.this.resource_id
+  value       = azurerm_firewall.this.id
 }
