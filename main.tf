@@ -43,10 +43,9 @@ resource "azurerm_firewall" "this" {
   }
 
   lifecycle {
-    ignore_changes = [private_ip_ranges, tags, dns_servers]
+    ignore_changes = [private_ip_ranges, tags, dns_servers, name]
   }
 }
-
 # Assigning Roles to the Firewall based on the provided configurations.
 resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
