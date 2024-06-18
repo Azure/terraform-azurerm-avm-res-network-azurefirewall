@@ -43,11 +43,7 @@ resource "azurerm_firewall" "this" {
   }
 
   lifecycle {
-    ignore_changes = [
-      dns_servers,
-      tags,
-      private_ip_ranges,
-    ]
+    ignore_changes = [private_ip_ranges, tags, dns_servers]
   }
 }
 
