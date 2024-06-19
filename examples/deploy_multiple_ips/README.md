@@ -71,13 +71,17 @@ resource "azurerm_public_ip" "public_ip" {
   public_ip_prefix_id = azurerm_public_ip_prefix.public_ip_prefix.id
   sku                 = "Standard"
   zones               = ["1", "2", "3"]
+
+  lifecycle {
+    ignore_changes = [zones]
+  }
 }
 
 # This is the module call
 module "firewall" {
   source = "../.."
   # source             = "Azure/avm-res-network-firewall/azurerm"
-  name                = module.naming.firewall.name
+  name                = module.naming.firewall.name_unique
   enable_telemetry    = var.enable_telemetry
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -95,6 +99,9 @@ module "firewall" {
       public_ip_address_id = azurerm_public_ip.public_ip[1].id
     }
   ]
+  tags = {
+    environment = "terraform"
+  }
 }
 ```
 

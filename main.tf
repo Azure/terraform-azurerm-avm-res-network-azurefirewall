@@ -41,10 +41,6 @@ resource "azurerm_firewall" "this" {
       public_ip_count = virtual_hub.value.public_ip_count
     }
   }
-
-  lifecycle {
-    ignore_changes = [private_ip_ranges, tags, dns_servers, name]
-  }
 }
 # Assigning Roles to the Firewall based on the provided configurations.
 resource "azurerm_role_assignment" "this" {
