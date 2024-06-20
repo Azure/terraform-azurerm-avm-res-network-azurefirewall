@@ -61,12 +61,12 @@ resource "azurerm_public_ip_prefix" "public_ip_prefix" {
   sku                 = "Standard"
 }
 
-resource "azurerm_public_ip" "public_ip" {
-  count = 2
+resource "azurerm_public_ip" "pip" {
+  for_each = toset(["0", "1"])
 
   allocation_method   = "Static"
   location            = azurerm_resource_group.rg.location
-  name                = "pip-fw-${count.index}"
+  name                = "module.naming.public_ip.name_unique-${each.key}"
   resource_group_name = azurerm_resource_group.rg.name
   public_ip_prefix_id = azurerm_public_ip_prefix.public_ip_prefix.id
   sku                 = "Standard"
@@ -92,11 +92,11 @@ module "firewall" {
     {
       name                 = "ipconfig1"
       subnet_id            = azurerm_subnet.subnet.id
-      public_ip_address_id = azurerm_public_ip.public_ip[0].id
+      public_ip_address_id = azurerm_public_ip.pip[0].id
     },
     {
       name                 = "ipconfig2"
-      public_ip_address_id = azurerm_public_ip.public_ip[1].id
+      public_ip_address_id = azurerm_public_ip.pip[1].id
     }
   ]
   tags = {
@@ -128,7 +128,7 @@ The following providers are used by this module:
 
 The following resources are used by this module:
 
-- [azurerm_public_ip.public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
+- [azurerm_public_ip.pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) (resource)
 - [azurerm_public_ip_prefix.public_ip_prefix](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip_prefix) (resource)
 - [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
 - [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
