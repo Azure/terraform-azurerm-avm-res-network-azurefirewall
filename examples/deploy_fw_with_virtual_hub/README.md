@@ -1,19 +1,24 @@
 <!-- BEGIN_TF_DOCS -->
-# virtual\_hub Example
+# Deploy Azure Firewall in a Virtual Hub
 
 This deploys the Azure Firewall and Firewall Policy with a Virtual Hub and a Virtual WAN.
 
+- Azure Firewall
+- Azure Firewall Policy
+- Azure Virtual WAN
+- Azure Virtual Hub
+
 ```hcl
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = "~> 1.5"
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.7.0, < 4.0.0"
+      version = "~> 3.74"
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.5.0, < 4.0.0"
+      version = "~> 3.5"
     }
   }
 }
@@ -24,8 +29,8 @@ provider "azurerm" {
 
 # This picks a random region from the list of regions.
 resource "random_integer" "region_index" {
-  min = 0
   max = length(local.azure_regions) - 1
+  min = 0
 }
 
 # This ensures we have unique CAF compliant names for our resources.
@@ -36,23 +41,23 @@ module "naming" {
 
 # This is required for resource modules
 resource "azurerm_resource_group" "rg" {
-  name     = module.naming.resource_group.name_unique
   location = local.azure_regions[random_integer.region_index.result]
+  name     = module.naming.resource_group.name_unique
 }
 
 resource "azurerm_virtual_wan" "vwan" {
+  location            = azurerm_resource_group.rg.location
   name                = module.naming.virtual_wan.name
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
   type                = "Standard"
 }
 
 resource "azurerm_virtual_hub" "vhub" {
+  location            = azurerm_resource_group.rg.location
   name                = "virtual-hub"
   resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
   address_prefix      = "10.1.0.0/16"
+  virtual_wan_id      = azurerm_virtual_wan.vwan.id
 }
 
 # This is the module call
@@ -76,7 +81,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version             = ">=0.1.0"
+  version             = ">=0.2.0"
   name                = module.naming.firewall_policy.name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -90,19 +95,19 @@ module "fw_policy" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.3.0)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.7.0, < 4.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 3.74)
 
-- <a name="requirement_random"></a> [random](#requirement\_random) (>= 3.5.0, < 4.0.0)
+- <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
 ## Providers
 
 The following providers are used by this module:
 
-- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (>= 3.7.0, < 4.0.0)
+- <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) (~> 3.74)
 
-- <a name="provider_random"></a> [random](#provider\_random) (>= 3.5.0, < 4.0.0)
+- <a name="provider_random"></a> [random](#provider\_random) (~> 3.5)
 
 ## Resources
 
@@ -150,7 +155,7 @@ Version:
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: >=0.1.0
+Version: >=0.2.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
