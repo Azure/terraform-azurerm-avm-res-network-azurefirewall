@@ -81,7 +81,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version             = ">=0.2.0"
+  version             = "0.2.0"
   name                = module.naming.firewall_policy.name
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
@@ -155,7 +155,7 @@ Version:
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: >=0.2.0
+Version: 0.2.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 

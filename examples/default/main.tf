@@ -50,7 +50,7 @@ resource "azurerm_subnet" "subnet" {
 
 module "fw_public_ip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = ">=0.1.0"
+  version = "0.1.2"
   # insert the 3 required variables here
   name                = "pip-fw-terraform"
   location            = azurerm_resource_group.rg.location
@@ -65,7 +65,7 @@ module "fw_public_ip" {
 
 module "fwpolicy" {
   source              = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version             = ">=0.1.0"
+  version             = "0.2.0"
   name                = module.naming.firewall_policy.name_unique
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
