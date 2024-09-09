@@ -11,6 +11,7 @@ resource "azurerm_firewall" "this" {
 
   dynamic "ip_configuration" {
     for_each = var.firewall_ip_configuration == null ? [] : var.firewall_ip_configuration
+
     content {
       name                 = ip_configuration.value.name
       public_ip_address_id = ip_configuration.value.public_ip_address_id
@@ -19,6 +20,7 @@ resource "azurerm_firewall" "this" {
   }
   dynamic "management_ip_configuration" {
     for_each = var.firewall_management_ip_configuration == null ? [] : [var.firewall_management_ip_configuration]
+
     content {
       name                 = management_ip_configuration.value.name
       public_ip_address_id = management_ip_configuration.value.public_ip_address_id
@@ -27,6 +29,7 @@ resource "azurerm_firewall" "this" {
   }
   dynamic "timeouts" {
     for_each = var.firewall_timeouts == null ? [] : [var.firewall_timeouts]
+
     content {
       create = timeouts.value.create
       delete = timeouts.value.delete
@@ -36,6 +39,7 @@ resource "azurerm_firewall" "this" {
   }
   dynamic "virtual_hub" {
     for_each = var.firewall_virtual_hub == null ? [] : [var.firewall_virtual_hub]
+
     content {
       virtual_hub_id  = virtual_hub.value.virtual_hub_id
       public_ip_count = virtual_hub.value.public_ip_count
@@ -72,18 +76,21 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
   dynamic "enabled_log" {
     for_each = each.value.log_categories
+
     content {
       category = enabled_log.value
     }
   }
   dynamic "enabled_log" {
     for_each = each.value.log_groups
+
     content {
       category_group = enabled_log.value
     }
   }
   dynamic "metric" {
     for_each = each.value.metric_categories
+
     content {
       category = metric.value
     }
