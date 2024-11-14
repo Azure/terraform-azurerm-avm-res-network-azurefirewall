@@ -38,7 +38,7 @@ resource "azurerm_firewall" "this" {
     }
   }
   dynamic "virtual_hub" {
-    for_each = var.firewall_virtual_hub == null ? [] : [var.firewall_virtual_hub]
+    for_each = var.firewall_virtual_hub == null ? [] : var.firewall_virtual_hub
 
     content {
       virtual_hub_id  = virtual_hub.value.virtual_hub_id

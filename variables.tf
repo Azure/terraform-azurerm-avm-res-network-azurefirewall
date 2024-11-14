@@ -140,10 +140,10 @@ EOT
 }
 
 variable "firewall_virtual_hub" {
-  type = object({
+  type = list(object({
     public_ip_count = optional(number)
     virtual_hub_id  = string
-  })
+  }))
   default     = null
   description = <<-EOT
  - `public_ip_count` - (Optional) Specifies the number of public IPs to assign to the Firewall. Defaults to `1`.

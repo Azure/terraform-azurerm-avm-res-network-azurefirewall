@@ -60,10 +60,12 @@ module "firewall" {
   firewall_sku_tier   = "Standard"
   firewall_sku_name   = "AZFW_Hub"
   firewall_zones      = ["1", "2", "3"]
-  firewall_virtual_hub = {
-    virtual_hub_id  = azurerm_virtual_hub.vhub.id
-    public_ip_count = 4
-  }
+  firewall_virtual_hub = [
+    {
+      virtual_hub_id  = azurerm_virtual_hub.vhub.id
+      public_ip_count = 4
+    }
+  ]
   firewall_policy_id = module.fw_policy.resource.id
 }
 
