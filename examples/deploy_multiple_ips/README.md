@@ -6,6 +6,7 @@ This example deploys an Azure Firewall with multiple Public IPs
 ```hcl
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -41,10 +42,10 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  address_space       = ["10.1.0.0/16"]
   location            = azurerm_resource_group.rg.location
   name                = module.naming.virtual_network.name
   resource_group_name = azurerm_resource_group.rg.name
+  address_space       = ["10.1.0.0/16"]
 }
 resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.1.0.0/26"]
@@ -80,25 +81,26 @@ resource "azurerm_public_ip" "pip" {
 # This is the module call
 module "firewall" {
   source = "../.."
+
+  firewall_sku_name = "AZFW_VNet"
+  firewall_sku_tier = "Standard"
+  location          = azurerm_resource_group.rg.location
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name_unique
-  enable_telemetry    = var.enable_telemetry
-  location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  firewall_sku_tier   = "Standard"
-  firewall_sku_name   = "AZFW_VNet"
+  enable_telemetry    = var.enable_telemetry
   firewall_zones      = ["1", "2", "3"]
-  firewall_ip_configuration = [
-    {
+  ip_configurations = {
+    ipconfig1 = {
       name                 = "ipconfig1"
       subnet_id            = azurerm_subnet.subnet.id
       public_ip_address_id = azurerm_public_ip.pip[0].id
-    },
-    {
+    }
+    ipconfig2 = {
       name                 = "ipconfig2"
       public_ip_address_id = azurerm_public_ip.pip[1].id
     }
-  ]
+  }
   tags = {
     environment = "terraform"
   }

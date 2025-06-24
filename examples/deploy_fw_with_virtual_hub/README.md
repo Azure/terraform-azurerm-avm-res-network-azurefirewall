@@ -11,6 +11,7 @@ This deploys the Azure Firewall and Firewall Policy with a Virtual Hub and a Vir
 ```hcl
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -63,27 +64,29 @@ resource "azurerm_virtual_hub" "vhub" {
 # This is the module call
 module "firewall" {
   source = "../.."
+
+  firewall_sku_name = "AZFW_Hub"
+  firewall_sku_tier = "Standard"
+  location          = azurerm_resource_group.rg.location
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name
-  enable_telemetry    = var.enable_telemetry
-  location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  firewall_sku_tier   = "Standard"
-  firewall_sku_name   = "AZFW_Hub"
-  firewall_zones      = ["1", "2", "3"]
+  enable_telemetry    = var.enable_telemetry
+  firewall_policy_id  = module.fw_policy.resource.id
   firewall_virtual_hub = {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
     public_ip_count = 4
   }
-  firewall_policy_id = module.fw_policy.resource.id
+  firewall_zones = ["1", "2", "3"]
 }
 
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version             = "0.2.0"
-  name                = module.naming.firewall_policy.name
+  version = "0.2.0"
+
   location            = azurerm_resource_group.rg.location
+  name                = module.naming.firewall_policy.name
   resource_group_name = azurerm_resource_group.rg.name
 }
 

@@ -18,6 +18,15 @@ resource "azurerm_firewall" "this" {
       subnet_id            = ip_configuration.value.subnet_id
     }
   }
+  dynamic "ip_configuration" {
+    for_each = var.ip_configurations
+
+    content {
+      name                 = ip_configuration.value.name
+      public_ip_address_id = ip_configuration.value.public_ip_address_id
+      subnet_id            = ip_configuration.value.subnet_id
+    }
+  }
   dynamic "management_ip_configuration" {
     for_each = var.firewall_management_ip_configuration == null ? [] : [var.firewall_management_ip_configuration]
 

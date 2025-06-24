@@ -44,7 +44,7 @@ variable "diagnostic_settings" {
   default     = {}
   description = <<DESCRIPTION
   A map of diagnostic settings to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
+
   - `name` - (Optional) The name of the diagnostic setting. One will be generated if not set, however this will not be unique if you want to create multiple diagnostic setting resources.
   - `log_categories` - (Optional) A set of log categories to send to the log analytics workspace. Defaults to `[]`.
   - `log_groups` - (Optional) A set of log groups to send to the log analytics workspace. Defaults to `["allLogs"]`.
@@ -91,6 +91,8 @@ variable "firewall_ip_configuration" {
   }))
   default     = null
   description = <<-EOT
+[DEPRECATED] Use `ip_configurations` instead. This variable is deprecated and will be removed in a future version.
+
  - `name` - (Required) Specifies the name of the IP Configuration.
  - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
  - `subnet_id` - (Optional) Reference to the subnet associated with the IP Configuration. Changing this forces a new resource to be created.
@@ -157,6 +159,32 @@ variable "firewall_zones" {
   description = "(Required) Specifies a list of Availability Zones in which this Azure Firewall should be located. Changing this forces a new Azure Firewall to be created."
 }
 
+variable "ip_configurations" {
+  type = map(object({
+    name                 = string
+    public_ip_address_id = optional(string)
+    subnet_id            = optional(string)
+  }))
+  default     = {}
+  description = <<-EOT
+This variable defines the IP configurations for the Azure Firewall. It is a map where each key is a unique identifier for the configuration.
+
+ - `name` - (Required) Specifies the name of the IP Configuration.
+ - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
+ - `subnet_id` - (Optional) Reference to the subnet associated with the IP Configuration. This should only be supplied for one ip configuration. Changing this forces a new resource to be created.
+EOT
+  nullable    = false
+
+  validation {
+    condition     = length(var.ip_configurations) > 0 ? length([for _, v in var.ip_configurations : v if v.subnet_id != null]) == 1 : true
+    error_message = "At least one and only one IP configuration may contain a subnet_id."
+  }
+  validation {
+    condition     = length(var.ip_configurations) > 0 && length(var.firewall_ip_configuration == null ? [] : var.firewall_ip_configuration) > 0 ? false : true
+    error_message = "The `firewall_ip_configuration` variable is deprecated and should not be used alongside `ip_configurations`. Please use `ip_configurations` instead."
+  }
+}
+
 variable "lock" {
   type = object({
     kind = string
@@ -165,7 +193,7 @@ variable "lock" {
   default     = null
   description = <<DESCRIPTION
   Controls the Resource Lock configuration for this resource. The following properties can be specified:
-  
+
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
   DESCRIPTION
@@ -190,7 +218,7 @@ variable "role_assignments" {
   default     = {}
   description = <<DESCRIPTION
   A map of role assignments to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
-  
+
   - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
@@ -199,7 +227,7 @@ variable "role_assignments" {
   - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
   - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
   - `principal_type` - (Optional) The type of the `principal_id`. Possible values are `User`, `Group` and `ServicePrincipal`. It is necessary to explicitly set this attribute when creating role assignments if the principal creating the assignment is constrained by ABAC rules that filters on the PrincipalType attribute.
-  
+
   > Note: only set `skip_service_principal_aad_check` to true if you are assigning a role to a service principal.
   DESCRIPTION
   nullable    = false

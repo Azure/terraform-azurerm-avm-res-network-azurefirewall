@@ -1,5 +1,6 @@
 terraform {
   required_version = "~> 1.5"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -35,10 +36,10 @@ resource "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  address_space       = ["10.1.0.0/16"]
   location            = azurerm_resource_group.rg.location
   name                = module.naming.virtual_network.name
   resource_group_name = azurerm_resource_group.rg.name
+  address_space       = ["10.1.0.0/16"]
 }
 
 resource "azurerm_subnet" "subnet" {
@@ -51,9 +52,10 @@ resource "azurerm_subnet" "subnet" {
 module "fw_public_ip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
   version = "0.1.2"
+
+  location = azurerm_resource_group.rg.location
   # insert the 3 required variables here
   name                = "pip-fw-terraform"
-  location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
   sku                 = "Standard"
@@ -64,29 +66,31 @@ module "fw_public_ip" {
 }
 
 module "fwpolicy" {
-  source              = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version             = "0.2.0"
-  name                = module.naming.firewall_policy.name_unique
+  source  = "Azure/avm-res-network-firewallpolicy/azurerm"
+  version = "0.2.0"
+
   location            = azurerm_resource_group.rg.location
+  name                = module.naming.firewall_policy.name_unique
   resource_group_name = azurerm_resource_group.rg.name
 }
 # This is the module call
 module "firewall" {
   source = "../.."
+
+  firewall_sku_name = "AZFW_VNet"
+  firewall_sku_tier = "Standard"
+  location          = azurerm_resource_group.rg.location
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name
-  enable_telemetry    = var.enable_telemetry
-  location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
-  firewall_sku_tier   = "Standard"
-  firewall_sku_name   = "AZFW_VNet"
+  enable_telemetry    = var.enable_telemetry
   firewall_zones      = ["1", "2", "3"]
-  firewall_ip_configuration = [
-    {
+  ip_configurations = {
+    default = {
       name                 = "ipconfig1"
       subnet_id            = azurerm_subnet.subnet.id
       public_ip_address_id = module.fw_public_ip.public_ip_id
     }
-  ]
+  }
 }
 

@@ -116,9 +116,11 @@ Default: `true`
 
 ### <a name="input_firewall_ip_configuration"></a> [firewall\_ip\_configuration](#input\_firewall\_ip\_configuration)
 
-Description: - `name` - (Required) Specifies the name of the IP Configuration.
-- `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
-- `subnet_id` - (Optional) Reference to the subnet associated with the IP Configuration. Changing this forces a new resource to be created.
+Description: [DEPRECATED] Use `ip_configurations` instead. This variable is deprecated and will be removed in a future version.
+
+ - `name` - (Required) Specifies the name of the IP Configuration.
+ - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
+ - `subnet_id` - (Optional) Reference to the subnet associated with the IP Configuration. Changing this forces a new resource to be created.
 
 Type:
 
@@ -217,6 +219,26 @@ Default:
   "3"
 ]
 ```
+
+### <a name="input_ip_configurations"></a> [ip\_configurations](#input\_ip\_configurations)
+
+Description: This variable defines the IP configurations for the Azure Firewall. It is a map where each key is a unique identifier for the configuration.
+
+ - `name` - (Required) Specifies the name of the IP Configuration.
+ - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
+ - `subnet_id` - (Optional) Reference to the subnet associated with the IP Configuration. This should only be supplied for one ip configuration. Changing this forces a new resource to be created.
+
+Type:
+
+```hcl
+map(object({
+    name                 = string
+    public_ip_address_id = optional(string)
+    subnet_id            = optional(string)
+  }))
+```
+
+Default: `{}`
 
 ### <a name="input_lock"></a> [lock](#input\_lock)
 
