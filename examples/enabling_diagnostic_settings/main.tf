@@ -67,7 +67,7 @@ module "fw_public_ip" {
 
 module "fwpolicy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.2.0"
+  version = "0.3.4"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name_unique
