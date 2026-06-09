@@ -51,7 +51,7 @@ resource "azurerm_subnet" "subnet" {
 
 module "fw_public_ip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.1.2"
+  version = "0.2.1"
 
   location = azurerm_resource_group.rg.location
   # insert the 3 required variables here
