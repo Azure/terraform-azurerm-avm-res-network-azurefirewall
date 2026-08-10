@@ -27,6 +27,7 @@ resource "azurerm_firewall" "this" {
       subnet_id            = ip_configuration.value.subnet_id
     }
   }
+
   dynamic "management_ip_configuration" {
     for_each = var.firewall_management_ip_configuration == null ? [] : [var.firewall_management_ip_configuration]
 
@@ -36,6 +37,7 @@ resource "azurerm_firewall" "this" {
       subnet_id            = management_ip_configuration.value.subnet_id
     }
   }
+
   dynamic "timeouts" {
     for_each = var.firewall_timeouts == null ? [] : [var.firewall_timeouts]
 
@@ -46,6 +48,7 @@ resource "azurerm_firewall" "this" {
       update = timeouts.value.update
     }
   }
+
   dynamic "virtual_hub" {
     for_each = var.firewall_virtual_hub == null ? [] : [var.firewall_virtual_hub]
 
@@ -55,6 +58,7 @@ resource "azurerm_firewall" "this" {
     }
   }
 }
+
 # Assigning Roles to the Firewall based on the provided configurations.
 resource "azurerm_role_assignment" "this" {
   for_each = var.role_assignments
@@ -69,7 +73,6 @@ resource "azurerm_role_assignment" "this" {
   role_definition_name                   = strcontains(lower(each.value.role_definition_id_or_name), lower(local.role_definition_resource_substring)) ? null : each.value.role_definition_id_or_name
   skip_service_principal_aad_check       = each.value.skip_service_principal_aad_check
 }
-
 
 resource "azurerm_monitor_diagnostic_setting" "this" {
   for_each = var.diagnostic_settings
@@ -97,6 +100,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
       category_group = enabled_log.value
     }
   }
+
   dynamic "metric" {
     for_each = each.value.metric_categories
 
@@ -105,7 +109,6 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     }
   }
 }
-
 
 resource "azurerm_management_lock" "this" {
   count = var.lock != null ? 1 : 0
