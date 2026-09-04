@@ -50,10 +50,10 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  address_prefixes     = ["10.1.0.0/26"]
   name                 = "AzureFirewallSubnet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.1.0.0/26"]
 }
 
 module "fw_public_ip" {
@@ -80,6 +80,7 @@ module "fwpolicy" {
   name                = module.naming.firewall_policy.name_unique
   resource_group_name = azurerm_resource_group.rg.name
 }
+
 # This is the module call
 module "firewall" {
   source = "../.."
@@ -100,7 +101,6 @@ module "firewall" {
     }
   }
 }
-
 ```
 
 <!-- markdownlint-disable MD033 -->
