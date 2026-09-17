@@ -72,7 +72,7 @@ module "firewall" {
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name
   resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
+  enable_telemetry    = false
   firewall_policy_id  = module.fw_policy.resource.id
   firewall_virtual_hub = {
     virtual_hub_id  = azurerm_virtual_hub.vhub.id
@@ -89,6 +89,7 @@ module "fw_policy" {
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name
   resource_group_name = azurerm_resource_group.rg.name
+  enable_telemetry    = false
 }
 ```
 

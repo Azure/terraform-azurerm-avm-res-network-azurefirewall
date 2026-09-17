@@ -90,7 +90,7 @@ module "firewall" {
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name_unique
   resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
+  enable_telemetry    = false
   firewall_zones      = ["1", "2", "3"]
   ip_configurations = {
     ipconfig1 = {
