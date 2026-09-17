@@ -58,6 +58,7 @@ module "fw_public_ip" {
   name                = "pip-fw-terraform"
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  enable_telemetry    = false
   sku                 = "Standard"
   tags = {
     deployment = "terraform"
@@ -72,6 +73,7 @@ module "fwpolicy" {
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name_unique
   resource_group_name = azurerm_resource_group.rg.name
+  enable_telemetry    = false
 }
 
 # This is the module call
@@ -84,7 +86,7 @@ module "firewall" {
   # source             = "Azure/avm-res-network-firewall/azurerm"
   name                = module.naming.firewall.name
   resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
+  enable_telemetry    = false
   firewall_zones      = ["1", "2", "3"]
   ip_configurations = {
     default = {
