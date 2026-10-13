@@ -16,7 +16,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.71, < 5.0.0"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -84,7 +84,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version = "0.2.0"
+  version = "0.3.0"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name
@@ -100,7 +100,7 @@ The following requirements are needed by this module:
 
 - <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (>= 3.71, < 5.0.0)
+- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -150,7 +150,7 @@ Version:
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: 0.2.0
+Version: 0.3.0
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
