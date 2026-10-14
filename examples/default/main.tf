@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.71, < 5.0.0"
+      version = "~> 4.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -68,7 +68,7 @@ module "fw_public_ip" {
 
 module "fwpolicy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.2.0"
+  version = "0.3.0"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name_unique
