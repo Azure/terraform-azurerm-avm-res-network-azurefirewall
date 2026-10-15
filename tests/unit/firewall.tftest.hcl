@@ -1,7 +1,11 @@
 mock_provider "azurerm" {}
-mock_provider "azapi" {}
-mock_provider "modtm" {}
-mock_provider "random" {}
+mock_provider "azapi" {
+  mock_data "azapi_client_config" {
+    defaults = {
+      subscription_resource_id = "/subscriptions/00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 variables {
   enable_telemetry    = false
@@ -46,7 +50,7 @@ run "vnet_multiple_ip_configurations" {
     error_message = "Both existing Firewall output contracts must remain usable."
   }
   assert {
-    condition     = length(modtm_telemetry.telemetry) == 0 && length(data.azapi_client_config.telemetry) == 0
+    condition     = length(azapi_resource.telemetry) == 0 && length(data.azapi_client_config.telemetry) == 0
     error_message = "Disabling telemetry must omit the telemetry resource and client configuration."
   }
 }
