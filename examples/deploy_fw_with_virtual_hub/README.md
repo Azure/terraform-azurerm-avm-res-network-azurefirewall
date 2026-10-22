@@ -18,6 +18,7 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
+    # tflint-ignore: terraform_unused_required_providers
     modtm = {
       source  = "registry.terraform.io/azure/modtm"
       version = "~> 0.3"
@@ -88,8 +89,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version   = "0.3.0"
-  providers = { modtm = modtm }
+  version = "0.3.0"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name
