@@ -1,25 +1,16 @@
 terraform {
-  required_version = "~> 1.5"
+  required_version = ">= 1.11, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
   }
-}
-
-provider "azurerm" {
-  features {}
 }
 
 # This picks a random region from the list of regions.
@@ -35,52 +26,68 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "rg" {
+resource "azapi_resource" "resource_group" {
   location = local.azure_regions[random_integer.region_index.result]
   name     = module.naming.resource_group.name_unique
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_virtual_wan" "vwan" {
-  location            = azurerm_resource_group.rg.location
-  name                = module.naming.virtual_wan.name
-  resource_group_name = azurerm_resource_group.rg.name
-  type                = "Standard"
+resource "azapi_resource" "virtual_wan" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.virtual_wan.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualWans@2024-05-01"
+  body = {
+    properties = {
+      type = "Standard"
+    }
+  }
 }
 
-resource "azurerm_virtual_hub" "vhub" {
-  location            = azurerm_resource_group.rg.location
-  name                = "virtual-hub"
-  resource_group_name = azurerm_resource_group.rg.name
-  address_prefix      = "10.1.0.0/16"
-  virtual_wan_id      = azurerm_virtual_wan.vwan.id
+resource "azapi_resource" "virtual_hub" {
+  location  = azapi_resource.resource_group.location
+  name      = "virtual-hub"
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualHubs@2024-05-01"
+  body = {
+    properties = {
+      addressPrefix = "10.1.0.0/16"
+      sku           = "Standard"
+      virtualWan = {
+        id = azapi_resource.virtual_wan.id
+      }
+    }
+  }
+}
+
+resource "azapi_resource" "firewall_policy" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.firewall_policy.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/firewallPolicies@2024-05-01"
+  body = {
+    properties = {
+      sku = {
+        tier = "Standard"
+      }
+    }
+  }
 }
 
 # This is the module call
 module "firewall" {
-  source = "../.."
+  source = "../../"
 
-  firewall_sku_name = "AZFW_Hub"
-  firewall_sku_tier = "Standard"
-  location          = azurerm_resource_group.rg.location
-  # source             = "Azure/avm-res-network-firewall/azurerm"
+  firewall_sku_name   = "AZFW_Hub"
+  firewall_sku_tier   = "Standard"
+  location            = azapi_resource.resource_group.location
   name                = module.naming.firewall.name
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azapi_resource.resource_group.name
   enable_telemetry    = var.enable_telemetry
-  firewall_policy_id  = module.fw_policy.resource.id
+  firewall_policy_id  = azapi_resource.firewall_policy.id
   firewall_virtual_hub = {
-    virtual_hub_id  = azurerm_virtual_hub.vhub.id
+    virtual_hub_id  = azapi_resource.virtual_hub.id
     public_ip_count = 4
   }
   firewall_zones = ["1", "2", "3"]
-}
-
-module "fw_policy" {
-  source = "Azure/avm-res-network-firewallpolicy/azurerm"
-  # insert the 3 required variables here
-  version = "0.3.0"
-
-  location            = azurerm_resource_group.rg.location
-  name                = module.naming.firewall_policy.name
-  resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
 }
