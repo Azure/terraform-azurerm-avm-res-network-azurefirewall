@@ -4,34 +4,71 @@
 
 Module to deploy Azure Firewall
 
-Requires AzureRM 4.x. Set `ARM_SUBSCRIPTION_ID` or configure `subscription_id` in the calling provider. Existing Firewall resource addresses and inputs are unchanged; no state move is required.
+## Upgrading from 0.4.x or earlier
 
-Honoring formerly ignored role assignment descriptions can recreate affected assignments.
+The Firewall, its lock, role assignments and diagnostic settings are now AzAPI resources, and the module no longer uses the AzureRM provider. `moved` blocks carry them to their new addresses in the state, so nothing is recreated. No input changes are needed, but Terraform 1.11 or later is required.
 
-"Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. The module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to https://semver.org/"
+1. A `ReadOnly` lock blocks the upgrade, because the Firewall, its role assignments and diagnostic settings are updated. Change it to `CanNotDelete`, or remove it, until the upgrade is applied.
+1. Cross-tenant role assignments, which set `delegated_managed_identity_resource_id`, need extra steps. The AzureRM provider stored their ID with a `|<tenant-id>` suffix that the `moved` block cannot convert. Before planning, remove each one from the state, then import it at its new address with an `import` block in your root module:
+
+   ```pwsh
+   terraform state rm 'module.<module-name>.azurerm_role_assignment.this["<key>"]'
+   ```
+
+   ```hcl
+   import {
+     to = module.<module-name>.azapi_resource.role_assignments["<key>"]
+     id = "<role assignment resource ID, without the |<tenant-id> suffix>"
+   }
+   ```
+
+1. Run `terraform init -upgrade`, then `terraform plan`. The plan must not destroy or replace anything. It updates the Firewall, lock, role assignments and diagnostic settings in place with the same settings, and adds:
+   - a `random_uuid` for each role assignment, which only exists in the state. The assignments keep their names;
+   - `time_sleep.lock_removal`, when a lock is set;
+   - the AVM telemetry resources, when telemetry is enabled. The previous telemetry resources are removed from the state without being destroyed.
+
+   The private and public IP addresses of the Firewall are read again during the apply, so values derived from them, for example routes that use the Firewall as their next hop, show as known after apply. They keep the same values.
+
+   Role assignment descriptions were not sent by earlier versions. A description you set is added to the existing assignment in place. When `firewall_private_ip_ranges` lists more than one range, the update of the Firewall may also send them in a different order; they are the same ranges.
+1. Apply the plan. The Firewall is updated with the same settings, which takes a few minutes. Classic rule collections and the threat intelligence mode are read from Azure and sent back unchanged. Later plans report no changes, except that, when telemetry is enabled, each plan updates the AVM telemetry deployment to record the apply.
+
+Other changes:
+
+- Adding, removing or reordering IP configurations, for example to add a public IP, now updates the Firewall in place instead of replacing it. Changing the subnet, the zones, the SKU name or the management IP configuration still replaces it.
+- `parent_id` can be set instead of `resource_group_name`.
+- `resource_types`, `retry`, `timeouts` and `ignore_body_changes` cover the Firewall, its lock, role assignments and diagnostic settings. For the Firewall, `firewall_timeouts` takes precedence and keeps its defaults.
+- `lock` accepts `notes`, and `role_assignments` accepts `name`.
+- New outputs `name` and `private_ip_address`. The `resource` output keeps the attribute names of the `azurerm_firewall` resource.
+- Role names are matched, ignoring case, against the role definitions that can be assigned in the resource group, and an unknown name fails during plan.
+- The public IP count of a Firewall in a Virtual Hub can still be increased in place. It cannot be reduced in place, because Azure then requires the public IPs to retain; remove public IPs outside Terraform first, then set the new count. The AzureRM provider silently kept the most recently added addresses.
+
+> Major version Zero (0.y.z) is for initial development. Anything MAY change at any time. A module SHOULD NOT be considered stable till at least it is major version one (1.0.0) or greater. Changes will always be via new versions being published and no changes will be made to existing published versions. For more details please go to <https://semver.org/>
 
 <!-- markdownlint-disable MD033 -->
 ## Requirements
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.7)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
 
 - <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
+- <a name="requirement_time"></a> [time](#requirement\_time) (~> 0.13)
 
 ## Resources
 
 The following resources are used by this module:
 
+- [azapi_resource.diagnostic_settings](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.lock](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.role_assignments](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [azapi_resource.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
-- [azurerm_firewall.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/firewall) (resource)
-- [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) (resource)
-- [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) (resource)
-- [azurerm_role_assignment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) (resource)
+- [azapi_resource.this](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [terraform_data.telemetry](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) (resource)
+- [time_sleep.lock_removal](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) (resource)
+- [azapi_client_config.current](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
 - [azapi_client_config.telemetry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/client_config) (data source)
+- [azapi_resource_list.role_definitions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/data-sources/resource_list) (data source)
 
 <!-- markdownlint-disable MD013 -->
 ## Required Inputs
@@ -64,7 +101,7 @@ Type: `string`
 
 ### <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name)
 
-Description: (Required) The name of the resource group in which to create the resource. Changing this forces a new resource to be created.
+Description: (Required) The name of the resource group in which to create the resource. Ignored when `parent_id` is set. Changing this forces a new resource to be created.
 
 Type: `string`
 
@@ -138,9 +175,11 @@ Default: `null`
 
 ### <a name="input_firewall_management_ip_configuration"></a> [firewall\_management\_ip\_configuration](#input\_firewall\_management\_ip\_configuration)
 
-Description: - `name` - (Required) Specifies the name of the IP Configuration.
-- `public_ip_address_id` - (Required) The ID of the Public IP Address associated with the firewall.
-- `subnet_id` - (Required) Reference to the subnet associated with the IP Configuration. Changing this forces a new resource to be created.
+Description: The management IP configuration of the firewall. Adding, removing or changing it forces a new resource to be created.
+
+ - `name` - (Required) Specifies the name of the IP Configuration.
+ - `public_ip_address_id` - (Required) The ID of the Public IP Address associated with the firewall.
+ - `subnet_id` - (Required) Reference to the subnet associated with the IP Configuration. Changing this forces a new resource to be created.
 
 Type:
 
@@ -172,10 +211,12 @@ Default: `null`
 
 ### <a name="input_firewall_timeouts"></a> [firewall\_timeouts](#input\_firewall\_timeouts)
 
-Description: - `create` - (Defaults to 90 minutes) Used when creating the Firewall.
-- `delete` - (Defaults to 90 minutes) Used when deleting the Firewall.
-- `read` - (Defaults to 5 minutes) Used when retrieving the Firewall.
-- `update` - (Defaults to 90 minutes) Used when updating the Firewall.
+Description: Timeouts for the Firewall. Each value takes precedence over the same value in `timeouts`.
+
+ - `create` - (Defaults to 90 minutes) Used when creating the Firewall.
+ - `delete` - (Defaults to 90 minutes) Used when deleting the Firewall.
+ - `read` - (Defaults to 5 minutes) Used when retrieving the Firewall.
+ - `update` - (Defaults to 90 minutes) Used when updating the Firewall.
 
 Type:
 
@@ -192,7 +233,7 @@ Default: `null`
 
 ### <a name="input_firewall_virtual_hub"></a> [firewall\_virtual\_hub](#input\_firewall\_virtual\_hub)
 
-Description: - `public_ip_count` - (Optional) Specifies the number of public IPs to assign to the Firewall. Defaults to `1`.
+Description: - `public_ip_count` - (Optional) Specifies the number of public IPs to assign to the Firewall. Defaults to `1`. Azure keeps the existing public IPs when the count is increased. It cannot be reduced in place, because Azure then requires the public IPs to retain: remove public IPs in the Azure portal, Azure CLI or Azure PowerShell first, then set the new count.
 - `virtual_hub_id` - (Required) Specifies the ID of the Virtual Hub where the Firewall resides in.
 
 Type:
@@ -222,9 +263,35 @@ Default:
 ]
 ```
 
+### <a name="input_ignore_body_changes"></a> [ignore\_body\_changes](#input\_ignore\_body\_changes)
+
+Description: Paths in each resource's `body` whose changes the AzAPI provider ignores. Prefer Terraform's `lifecycle.ignore_changes` when the paths are static; use this variable when the paths must be derived from variables or other non-static values.
+
+Paths use dot notation, for example `properties.sku.name`. Individual list items cannot be targeted — ignore the whole list property instead. Configuration changes at an ignored path are **not** sent to Azure until that path is removed from the list.
+
+Supplying a non-empty value requires Terraform 1.11 or later, because `ignore_body_changes` is a write-only argument. Changes take effect only after an apply, because the value is held in provider-private state.
+
+- `authorization_locks` - Ignored body paths for the management lock.
+- `authorization_role_assignments` - Ignored body paths for the role assignments.
+- `insights_diagnostic_settings` - Ignored body paths for the diagnostic settings.
+- `network_azure_firewalls` - Ignored body paths for the Firewall. `properties.applicationRuleCollections`, `properties.natRuleCollections`, `properties.networkRuleCollections`, `properties.threatIntelMode` and `zones` are always ignored in addition to these paths, so that updating the Firewall never removes classic rule collections managed outside this module and never resets the threat intelligence mode. Changing `firewall_zones` still replaces the Firewall.
+
+Type:
+
+```hcl
+object({
+    authorization_locks            = optional(list(string), [])
+    authorization_role_assignments = optional(list(string), [])
+    insights_diagnostic_settings   = optional(list(string), [])
+    network_azure_firewalls        = optional(list(string), [])
+  })
+```
+
+Default: `{}`
+
 ### <a name="input_ip_configurations"></a> [ip\_configurations](#input\_ip\_configurations)
 
-Description: This variable defines the IP configurations for the Azure Firewall. It is a map where each key is a unique identifier for the configuration.
+Description: This variable defines the IP configurations for the Azure Firewall. It is a map where each key is a unique identifier for the configuration. Adding or removing an IP configuration updates the Firewall in place.
 
  - `name` - (Required) Specifies the name of the IP Configuration.
  - `public_ip_address_id` - (Optional) The ID of the Public IP Address associated with the firewall.
@@ -248,13 +315,69 @@ Description:   Controls the Resource Lock configuration for this resource. The f
 
   - `kind` - (Required) The type of lock. Possible values are `\"CanNotDelete\"` and `\"ReadOnly\"`.
   - `name` - (Optional) The name of the lock. If not specified, a name will be generated based on the `kind` value. Changing this forces the creation of a new resource.
+  - `notes` - (Optional) Notes about the lock. This value maps to `Microsoft.Authorization/locks.properties.notes`. If not specified, a note describing the lock `kind` is used.
+
+  A `ReadOnly` lock also blocks changes to the Firewall's role assignments and diagnostic settings.
 
 Type:
 
 ```hcl
 object({
-    kind = string
-    name = optional(string, null)
+    kind  = string
+    name  = optional(string, null)
+    notes = optional(string, null)
+  })
+```
+
+Default: `null`
+
+### <a name="input_parent_id"></a> [parent\_id](#input\_parent\_id)
+
+Description: The resource ID of the resource group in which to create the Firewall, for example `/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg`. When provided, takes precedence over `resource_group_name`. Changing this forces a new resource to be created.
+
+Type: `string`
+
+Default: `null`
+
+### <a name="input_resource_types"></a> [resource\_types](#input\_resource\_types)
+
+Description: AzAPI resource types and API versions used by the module, in `<provider>/<resource>@<api-version>` form. Each key defaults to a tested value; supply only the keys you want to override, for example to target a sovereign cloud that serves older API versions.
+
+- `authorization_locks` - The management lock.
+- `authorization_role_assignments` - The role assignments.
+- `insights_diagnostic_settings` - The diagnostic settings. The default is a preview version because the stable version does not support log category groups.
+- `network_azure_firewalls` - The Firewall.
+
+Type:
+
+```hcl
+object({
+    authorization_locks            = optional(string, "Microsoft.Authorization/locks@2020-05-01")
+    authorization_role_assignments = optional(string, "Microsoft.Authorization/roleAssignments@2022-04-01")
+    insights_diagnostic_settings   = optional(string, "Microsoft.Insights/diagnosticSettings@2021-05-01-preview")
+    network_azure_firewalls        = optional(string, "Microsoft.Network/azureFirewalls@2025-01-01")
+  })
+```
+
+Default: `{}`
+
+### <a name="input_retry"></a> [retry](#input\_retry)
+
+Description: Retry configuration applied to every `azapi` resource managed by the module. Defaults to `null` (no custom retry).
+
+- `error_message_regex`  - (Optional) A list of regex patterns matching error messages that trigger a retry.
+- `interval_seconds`     - (Optional) Initial interval between retries in seconds.
+- `max_interval_seconds` - (Optional) Maximum interval between retries in seconds.
+
+See <https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource#retry> for full semantics.
+
+Type:
+
+```hcl
+object({
+    error_message_regex  = optional(list(string))
+    interval_seconds     = optional(number)
+    max_interval_seconds = optional(number)
   })
 ```
 
@@ -264,10 +387,11 @@ Default: `null`
 
 Description:   A map of role assignments to create on the Firewall. The map key is deliberately arbitrary to avoid issues where map keys maybe unknown at plan time.
 
-  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal.
+  - `name` - (Optional) The name of the role assignment. If not set, a random UUID will be generated. Changing this forces the creation of a new resource. Role assignments created by earlier versions of this module keep their existing name.
+  - `role_definition_id_or_name` - The ID or name of the role definition to assign to the principal. A name is matched, ignoring case, against the role definitions that can be assigned in the resource group. For a custom role that can only be assigned on this Firewall, use its ID.
   - `principal_id` - The ID of the principal to assign the role to.
   - `description` - (Optional) The description of the role assignment.
-  - `skip_service_principal_aad_check` - (Optional) If set to true, skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
+  - `skip_service_principal_aad_check` - (Optional) If set to true and `principal_type` is not set, `principal_type` is set to `ServicePrincipal`, which skips the Azure Active Directory check for the service principal in the tenant. Defaults to false.
   - `condition` - (Optional) The condition which will be used to scope the role assignment.
   - `condition_version` - (Optional) The version of the condition syntax. Leave as `null` if you are not using a condition, if you are then valid values are '2.0'.
   - `delegated_managed_identity_resource_id` - (Optional) The delegated Azure Resource Id which contains a Managed Identity. Changing this forces a new resource to be created. This field is only used in cross-tenant scenario.
@@ -279,6 +403,7 @@ Type:
 
 ```hcl
 map(object({
+    name                                   = optional(string, null)
     role_definition_id_or_name             = string
     principal_id                           = string
     description                            = optional(string, null)
@@ -300,18 +425,48 @@ Type: `map(string)`
 
 Default: `null`
 
+### <a name="input_timeouts"></a> [timeouts](#input\_timeouts)
+
+Description: Default per-operation timeouts applied to every `azapi` resource managed by the module. Defaults to `null` (provider defaults). Each value is a Go duration string (e.g. `30m`, `1h`). For the Firewall, `firewall_timeouts` takes precedence and the defaults are those described there.
+
+- `create` - (Optional) Timeout for create operations.
+- `read`   - (Optional) Timeout for read operations.
+- `update` - (Optional) Timeout for update operations.
+- `delete` - (Optional) Timeout for delete operations.
+
+Type:
+
+```hcl
+object({
+    create = optional(string)
+    read   = optional(string)
+    update = optional(string)
+    delete = optional(string)
+  })
+```
+
+Default: `null`
+
 ## Outputs
 
 The following outputs are exported:
 
+### <a name="output_name"></a> [name](#output\_name)
+
+Description: The name of the Firewall.
+
+### <a name="output_private_ip_address"></a> [private\_ip\_address](#output\_private\_ip\_address)
+
+Description: The private IP address of the Firewall: the address of the IP configuration in `AzureFirewallSubnet`, or the private hub IP address of a Firewall in a Virtual Hub.
+
 ### <a name="output_resource"></a> [resource](#output\_resource)
 
-Description: "This is the full output for the resource. This is the default output for the module following AVM standards. Review the examples below for the correct output to use in your module."  
+Description: The Firewall, with the attribute names and empty values of the `azurerm_firewall` resource that earlier versions of this module returned, so that existing references keep working. Prefer `resource_id`, `name` and `private_ip_address`.  
 Examples:
 - module.firewall.resource.id
 - module.firewall.resource.name
-- module.firewall.resource.ip\_configuration
-- module.firewall.resource.virtual\_hub
+- module.firewall.resource.ip\_configuration[0].private\_ip\_address
+- module.firewall.resource.virtual\_hub[0].private\_ip\_address
 
 ### <a name="output_resource_id"></a> [resource\_id](#output\_resource\_id)
 
@@ -319,7 +474,13 @@ Description: This is the resource id for the firewall resource.
 
 ## Modules
 
-No modules.
+The following Modules are called:
+
+### <a name="module_avm_interfaces"></a> [avm\_interfaces](#module\_avm\_interfaces)
+
+Source: Azure/avm-utl-interfaces/azure
+
+Version: 0.9.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
