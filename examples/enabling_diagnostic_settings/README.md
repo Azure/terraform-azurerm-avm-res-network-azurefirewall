@@ -44,7 +44,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # This is required for resource modules
@@ -69,7 +69,7 @@ resource "azurerm_subnet" "subnet" {
 
 module "fw_public_ip" {
   source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.1.0"
+  version = "0.2.1"
 
   location = azurerm_resource_group.rg.location
   # insert the 3 required variables here
@@ -86,7 +86,7 @@ module "fw_public_ip" {
 
 module "fwpolicy" {
   source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.3.0"
+  version = "0.3.4"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name_unique
@@ -195,13 +195,13 @@ Version:
 
 Source: Azure/avm-res-network-publicipaddress/azurerm
 
-Version: 0.1.0
+Version: 0.2.1
 
 ### <a name="module_fwpolicy"></a> [fwpolicy](#module\_fwpolicy)
 
 Source: Azure/avm-res-network-firewallpolicy/azurerm
 
-Version: 0.3.0
+Version: 0.3.4
 
 ### <a name="module_law"></a> [law](#module\_law)
 
@@ -213,7 +213,7 @@ Version: 0.5.1
 
 Source: Azure/avm-utl-naming/azure
 
-Version: 0.2.0
+Version: 0.3.0
 
 <!-- markdownlint-disable-next-line MD041 -->
 ## Data Collection
