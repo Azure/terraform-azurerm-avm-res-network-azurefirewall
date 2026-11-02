@@ -31,7 +31,7 @@ resource "random_integer" "region_index" {
 # This ensures we have unique CAF compliant names for our resources.
 module "naming" {
   source  = "Azure/avm-utl-naming/azure"
-  version = "0.2.0"
+  version = "0.3.0"
 }
 
 # This is required for resource modules
@@ -77,7 +77,7 @@ module "firewall" {
 module "fw_policy" {
   source = "Azure/avm-res-network-firewallpolicy/azurerm"
   # insert the 3 required variables here
-  version = "0.3.0"
+  version = "0.3.4"
 
   location            = azurerm_resource_group.rg.location
   name                = module.naming.firewall_policy.name
