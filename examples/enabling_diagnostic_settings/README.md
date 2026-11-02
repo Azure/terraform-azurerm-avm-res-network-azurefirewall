@@ -12,27 +12,18 @@ This example enables the diagnostics settings on the Azure Firewall and sends th
 
 ```hcl
 terraform {
-  required_version = "~> 1.5"
+  required_version = ">= 1.11, < 2.0"
 
   required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    # tflint-ignore: terraform_unused_required_providers
-    modtm = {
-      source  = "registry.terraform.io/azure/modtm"
-      version = "~> 0.3"
+    azapi = {
+      source  = "Azure/azapi"
+      version = "~> 2.12"
     }
     random = {
       source  = "hashicorp/random"
       version = "~> 3.5"
     }
   }
-}
-
-provider "azurerm" {
-  features {}
 }
 
 # This picks a random region from the list of regions.
@@ -48,91 +39,111 @@ module "naming" {
 }
 
 # This is required for resource modules
-resource "azurerm_resource_group" "rg" {
+resource "azapi_resource" "resource_group" {
   location = local.azure_regions[random_integer.region_index.result]
   name     = module.naming.resource_group.name_unique
+  type     = "Microsoft.Resources/resourceGroups@2024-03-01"
 }
 
-resource "azurerm_virtual_network" "vnet" {
-  location            = azurerm_resource_group.rg.location
-  name                = module.naming.virtual_network.name
-  resource_group_name = azurerm_resource_group.rg.name
-  address_space       = ["10.1.0.0/16"]
+resource "azapi_resource" "virtual_network" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.virtual_network.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/virtualNetworks@2024-05-01"
+  body = {
+    properties = {
+      addressSpace = {
+        addressPrefixes = ["10.1.0.0/16"]
+      }
+      subnets = [
+        {
+          name = "AzureFirewallSubnet"
+          properties = {
+            addressPrefix = "10.1.0.0/26"
+          }
+        }
+      ]
+    }
+  }
 }
 
-resource "azurerm_subnet" "subnet" {
-  name                 = "AzureFirewallSubnet"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.1.0.0/26"]
-}
-
-module "fw_public_ip" {
-  source  = "Azure/avm-res-network-publicipaddress/azurerm"
-  version = "0.1.0"
-
-  location = azurerm_resource_group.rg.location
-  # insert the 3 required variables here
-  name                = "pip-fw-terraform"
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  enable_telemetry    = var.enable_telemetry
-  sku                 = "Standard"
+resource "azapi_resource" "public_ip" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.public_ip.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/publicIPAddresses@2024-05-01"
+  body = {
+    properties = {
+      publicIPAddressVersion   = "IPv4"
+      publicIPAllocationMethod = "Static"
+    }
+    sku = {
+      name = "Standard"
+      tier = "Regional"
+    }
+    zones = ["1", "2", "3"]
+  }
   tags = {
     deployment = "terraform"
   }
-  zones = ["1", "2", "3"]
 }
 
-module "fwpolicy" {
-  source  = "Azure/avm-res-network-firewallpolicy/azurerm"
-  version = "0.3.0"
+resource "azapi_resource" "firewall_policy" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.firewall_policy.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.Network/firewallPolicies@2024-05-01"
+  body = {
+    properties = {
+      sku = {
+        tier = "Standard"
+      }
+    }
+  }
+}
 
-  location            = azurerm_resource_group.rg.location
-  name                = module.naming.firewall_policy.name_unique
-  resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
+resource "azapi_resource" "log_analytics_workspace" {
+  location  = azapi_resource.resource_group.location
+  name      = module.naming.log_analytics_workspace.name_unique
+  parent_id = azapi_resource.resource_group.id
+  type      = "Microsoft.OperationalInsights/workspaces@2023-09-01"
+  body = {
+    properties = {
+      retentionInDays = 30
+      sku = {
+        name = "PerGB2018"
+      }
+    }
+  }
 }
 
 # This is the module call
 module "firewall" {
-  source = "../.."
+  source = "../../"
 
-  firewall_sku_name = "AZFW_VNet"
-  firewall_sku_tier = "Standard"
-  location          = azurerm_resource_group.rg.location
-  # source             = "Azure/avm-res-network-firewall/azurerm"
+  firewall_sku_name   = "AZFW_VNet"
+  firewall_sku_tier   = "Standard"
+  location            = azapi_resource.resource_group.location
   name                = module.naming.firewall.name
-  resource_group_name = azurerm_resource_group.rg.name
+  resource_group_name = azapi_resource.resource_group.name
   diagnostic_settings = {
     to_law = {
       name                  = "diag"
-      workspace_resource_id = module.law.resource.id
+      workspace_resource_id = azapi_resource.log_analytics_workspace.id
       log_groups            = ["allLogs"]
       metric_categories     = ["AllMetrics"]
     }
   }
   enable_telemetry   = var.enable_telemetry
-  firewall_policy_id = module.fwpolicy.resource.id
+  firewall_policy_id = azapi_resource.firewall_policy.id
   firewall_zones     = ["1", "2", "3"]
   ip_configurations = {
     default = {
       name                 = "ipconfig1"
-      subnet_id            = azurerm_subnet.subnet.id
-      public_ip_address_id = module.fw_public_ip.public_ip_id
+      subnet_id            = "${azapi_resource.virtual_network.id}/subnets/AzureFirewallSubnet"
+      public_ip_address_id = azapi_resource.public_ip.id
     }
   }
-}
-
-module "law" {
-  source  = "Azure/avm-res-operationalinsights-workspace/azurerm"
-  version = "0.5.1"
-
-  location = azurerm_resource_group.rg.location
-  # insert the 3 required variables here
-  name                = "thislaworkspace"
-  resource_group_name = azurerm_resource_group.rg.name
-  enable_telemetry    = var.enable_telemetry
 }
 ```
 
@@ -141,11 +152,9 @@ module "law" {
 
 The following requirements are needed by this module:
 
-- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (~> 1.5)
+- <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) (>= 1.11, < 2.0)
 
-- <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) (~> 4.0)
-
-- <a name="requirement_modtm"></a> [modtm](#requirement\_modtm) (~> 0.3)
+- <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) (~> 2.12)
 
 - <a name="requirement_random"></a> [random](#requirement\_random) (~> 3.5)
 
@@ -153,9 +162,11 @@ The following requirements are needed by this module:
 
 The following resources are used by this module:
 
-- [azurerm_resource_group.rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) (resource)
-- [azurerm_subnet.subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) (resource)
-- [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) (resource)
+- [azapi_resource.firewall_policy](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.log_analytics_workspace](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.public_ip](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.resource_group](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
+- [azapi_resource.virtual_network](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource) (resource)
 - [random_integer.region_index](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/integer) (resource)
 
 <!-- markdownlint-disable MD013 -->
@@ -187,27 +198,9 @@ The following Modules are called:
 
 ### <a name="module_firewall"></a> [firewall](#module\_firewall)
 
-Source: ../..
+Source: ../../
 
 Version:
-
-### <a name="module_fw_public_ip"></a> [fw\_public\_ip](#module\_fw\_public\_ip)
-
-Source: Azure/avm-res-network-publicipaddress/azurerm
-
-Version: 0.1.0
-
-### <a name="module_fwpolicy"></a> [fwpolicy](#module\_fwpolicy)
-
-Source: Azure/avm-res-network-firewallpolicy/azurerm
-
-Version: 0.3.0
-
-### <a name="module_law"></a> [law](#module\_law)
-
-Source: Azure/avm-res-operationalinsights-workspace/azurerm
-
-Version: 0.5.1
 
 ### <a name="module_naming"></a> [naming](#module\_naming)
 
